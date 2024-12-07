@@ -1,16 +1,15 @@
 import { Sidebar } from "@/components/Sidebar";
 import { MetricCard } from "@/components/MetricCard";
-import { VideoCard } from "@/components/VideoCard";
+import { VideoList } from "@/components/VideoList";
 import { AnalyticsChart } from "@/components/AnalyticsChart";
 import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { useState, useRef } from "react";
+import { useRef } from "react";
 
 const Index = () => {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();
@@ -19,10 +18,9 @@ const Index = () => {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      setSelectedFile(file);
       toast({
-        title: "Video selected",
-        description: `"${file.name}" is being processed...`,
+        title: "Processing video",
+        description: "Your video is being processed...",
       });
     }
   };
@@ -65,25 +63,9 @@ const Index = () => {
             <AnalyticsChart />
           </div>
 
-          {/* Recent Videos */}
-          <h2 className="text-xl font-bold text-white mb-4">Recent Videos</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 touch-pan-x">
-            <VideoCard
-              title="How to Build a YouTube Dashboard with React"
-              views="1.2K"
-              thumbnail="https://picsum.photos/seed/1/400/225"
-            />
-            <VideoCard
-              title="10 Tips for Growing Your YouTube Channel in 2024"
-              views="3.4K"
-              thumbnail="https://picsum.photos/seed/2/400/225"
-            />
-            <VideoCard
-              title="The Ultimate Guide to Video SEO"
-              views="892"
-              thumbnail="https://picsum.photos/seed/3/400/225"
-            />
-          </div>
+          {/* Video List */}
+          <h2 className="text-xl font-bold text-white mb-4">Your Videos</h2>
+          <VideoList />
         </div>
       </main>
     </div>
