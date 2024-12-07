@@ -1,3 +1,4 @@
+import { Sidebar } from "@/components/Sidebar";
 import { MetricCard } from "@/components/MetricCard";
 import { VideoCard } from "@/components/VideoCard";
 import { AnalyticsChart } from "@/components/AnalyticsChart";
