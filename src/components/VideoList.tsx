@@ -4,11 +4,14 @@ import { Button } from "./ui/button";
 import { Pencil, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { Input } from "./ui/input";
+import { Textarea } from "./ui/textarea";
 import { useToast } from "./ui/use-toast";
 
 interface Video {
   id: string;
   title: string;
+  description?: string;
+  hashtags?: string[];
   views: string;
   thumbnail: string;
   file?: File;
@@ -19,22 +22,8 @@ export const VideoList = () => {
   const [videos, setVideos] = useState<Video[]>([]);
   const [editingVideo, setEditingVideo] = useState<Video | null>(null);
   const [newTitle, setNewTitle] = useState("");
-
-  const handleVideoUpload = (file: File) => {
-    const videoUrl = URL.createObjectURL(file);
-    const newVideo: Video = {
-      id: Date.now().toString(),
-      title: file.name,
-      views: "0",
-      thumbnail: videoUrl,
-      file: file
-    };
-    setVideos([...videos, newVideo]);
-    toast({
-      title: "Video uploaded",
-      description: "Your video has been successfully uploaded.",
-    });
-  };
+  const [newDescription, setNewDescription] = useState("");
+  const [newHashtags, setNewHashtags] = useState("");
 
   const handleDelete = (videoId: string) => {
     setVideos(videos.filter(video => video.id !== videoId));
@@ -47,17 +36,24 @@ export const VideoList = () => {
   const handleEdit = (video: Video) => {
     setEditingVideo(video);
     setNewTitle(video.title);
+    setNewDescription(video.description || "");
+    setNewHashtags(video.hashtags?.join(" ") || "");
   };
 
   const saveEdit = () => {
     if (editingVideo && newTitle.trim()) {
       setVideos(videos.map(v => 
-        v.id === editingVideo.id ? { ...v, title: newTitle } : v
+        v.id === editingVideo.id ? {
+          ...v,
+          title: newTitle,
+          description: newDescription,
+          hashtags: newHashtags.split(" ").filter(tag => tag.startsWith("#")),
+        } : v
       ));
       setEditingVideo(null);
       toast({
         title: "Changes saved",
-        description: "Your video title has been updated.",
+        description: "Your video details have been updated.",
       });
     }
   };
@@ -70,6 +66,8 @@ export const VideoList = () => {
             title={video.title}
             views={video.views}
             thumbnail={video.thumbnail}
+            description={video.description}
+            hashtags={video.hashtags}
           />
           <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
             <Dialog>
@@ -85,13 +83,23 @@ export const VideoList = () => {
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Edit Video Title</DialogTitle>
+                  <DialogTitle>Edit Video Details</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4 pt-4">
                   <Input
                     value={newTitle}
                     onChange={(e) => setNewTitle(e.target.value)}
                     placeholder="Enter new title"
+                  />
+                  <Textarea
+                    value={newDescription}
+                    onChange={(e) => setNewDescription(e.target.value)}
+                    placeholder="Enter new description"
+                  />
+                  <Input
+                    value={newHashtags}
+                    onChange={(e) => setNewHashtags(e.target.value)}
+                    placeholder="#youtube #video"
                   />
                   <Button onClick={saveEdit}>Save Changes</Button>
                 </div>
