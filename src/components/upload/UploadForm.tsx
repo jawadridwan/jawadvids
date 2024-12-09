@@ -1,10 +1,10 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
+import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
-import { Label } from "../ui/label";
-import { Button } from "../ui/button";
-import { Progress } from "../ui/progress";
-import { X } from "lucide-react";
+import { ThumbnailUpload } from "./ThumbnailUpload";
+import { HashtagInput } from "./HashtagInput";
+import { VisibilitySelect } from "./VisibilitySelect";
 import { useToast } from "../ui/use-toast";
 
 interface UploadFormProps {
@@ -14,226 +14,84 @@ interface UploadFormProps {
 
 export const UploadForm = ({ onUploadComplete, onClose }: UploadFormProps) => {
   const { toast } = useToast();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [isUploading, setIsUploading] = useState(false);
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    hashtags: "",
-  });
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [hashtags, setHashtags] = useState<string[]>([]);
+  const [visibility, setVisibility] = useState("public");
+  const [thumbnail, setThumbnail] = useState<File | null>(null);
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    e.stopPropagation();
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith('video/')) {
-      handleFileSelect(file);
-    } else {
+    
+    if (!title.trim()) {
       toast({
-        title: "Invalid file type",
-        description: "Please upload a video file",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleFileSelect = (file: File) => {
-    setSelectedFile(file);
-    setFormData(prev => ({
-      ...prev,
-      title: file.name.split('.')[0],
-    }));
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const simulateUpload = () => {
-    setIsUploading(true);
-    const interval = setInterval(() => {
-      setUploadProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setIsUploading(false);
-          return 100;
-        }
-        return prev + 10;
-      });
-    }, 500);
-  };
-
-  const handleUpload = () => {
-    if (!selectedFile) {
-      toast({
-        title: "Error",
-        description: "Please select a video file to upload",
+        title: "Title required",
+        description: "Please enter a title for your video.",
         variant: "destructive",
       });
       return;
     }
 
-    if (!formData.title.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a title for your video",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    simulateUpload();
-
-    const videoUrl = URL.createObjectURL(selectedFile);
     const videoData = {
-      id: Date.now().toString(),
-      title: formData.title,
-      description: formData.description,
-      hashtags: formData.hashtags.split(' ').filter(tag => tag.startsWith('#')),
+      id: crypto.randomUUID(),
+      title,
+      description,
+      hashtags,
       views: "0",
-      thumbnail: videoUrl,
-      file: selectedFile,
+      thumbnail: thumbnail ? URL.createObjectURL(thumbnail) : "/placeholder.svg",
       uploadDate: new Date().toISOString(),
-      status: 'processing',
+      status: 'processing' as const,
+      visibility,
     };
 
-    setTimeout(() => {
-      onUploadComplete(videoData);
-      setFormData({
-        title: "",
-        description: "",
-        hashtags: "",
-      });
-      setSelectedFile(null);
-      setUploadProgress(0);
-      onClose();
-      
-      toast({
-        title: "Success",
-        description: "Your video has been uploaded successfully",
-      });
-    }, 5000);
-  };
-
-  const cancelUpload = () => {
-    setIsUploading(false);
-    setUploadProgress(0);
-    setSelectedFile(null);
+    onUploadComplete(videoData);
+    onClose();
+    
     toast({
-      title: "Upload cancelled",
-      description: "Your video upload has been cancelled",
+      title: "Video uploaded successfully",
+      description: "Your video is now processing and will be available soon.",
     });
   };
 
   return (
-    <div className="space-y-6">
-      {!selectedFile ? (
-        <div
-          onDragOver={handleDragOver}
-          onDrop={handleDrop}
-          className="border-2 border-dashed border-gray-600 rounded-lg p-12 text-center hover:border-gray-400 transition-colors"
-        >
-          <Input
-            ref={fileInputRef}
-            type="file"
-            accept="video/*"
-            className="hidden"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) handleFileSelect(file);
-            }}
-          />
-          <div className="text-lg font-medium mb-2">
-            Drag and drop your video here
-          </div>
-          <div className="text-sm text-gray-500 mb-4">
-            or
-          </div>
-          <Button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            Select File
-          </Button>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {isUploading && (
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-500">Uploading: {selectedFile.name}</span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={cancelUpload}
-                  className="text-red-500 hover:text-red-600"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-              <Progress value={uploadProgress} className="h-2" />
-            </div>
-          )}
-          
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="title">Title</Label>
-              <Input
-                id="title"
-                name="title"
-                value={formData.title}
-                onChange={handleInputChange}
-                placeholder="Enter video title"
-                maxLength={100}
-              />
-            </div>
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-4">
+        <Input
+          placeholder="Video title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          maxLength={100}
+        />
+        
+        <Textarea
+          placeholder="Video description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          maxLength={5000}
+        />
 
-            <div>
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                name="description"
-                value={formData.description}
-                onChange={handleInputChange}
-                placeholder="Enter video description"
-                className="h-32"
-                maxLength={5000}
-              />
-            </div>
+        <HashtagInput
+          hashtags={hashtags}
+          onChange={setHashtags}
+          maxTags={15}
+        />
 
-            <div>
-              <Label htmlFor="hashtags">Hashtags</Label>
-              <Input
-                id="hashtags"
-                name="hashtags"
-                value={formData.hashtags}
-                onChange={handleInputChange}
-                placeholder="#youtube #video"
-              />
-            </div>
-          </div>
+        <ThumbnailUpload
+          onThumbnailSelect={(file) => setThumbnail(file)}
+        />
 
-          <Button
-            type="button"
-            onClick={handleUpload}
-            disabled={isUploading}
-            className="w-full"
-          >
-            {isUploading ? "Uploading..." : "Upload"}
-          </Button>
-        </div>
-      )}
-    </div>
+        <VisibilitySelect
+          value={visibility}
+          onChange={setVisibility}
+        />
+      </div>
+
+      <div className="flex justify-end gap-4">
+        <Button type="button" variant="outline" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button type="submit">Upload Video</Button>
+      </div>
+    </form>
   );
 };
