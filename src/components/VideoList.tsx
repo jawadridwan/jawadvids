@@ -1,11 +1,11 @@
-import { useState } from "react";
 import { VideoCard } from "./VideoCard";
 import { Button } from "./ui/button";
 import { Pencil, Trash2 } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { useToast } from "./ui/use-toast";
+import { useState } from "react";
 
 interface Video {
   id: string;
@@ -15,11 +15,17 @@ interface Video {
   views: string;
   thumbnail: string;
   file?: File;
+  uploadDate: string;
+  status: 'processing' | 'ready' | 'failed';
 }
 
-export const VideoList = () => {
+interface VideoListProps {
+  videos: Video[];
+  setVideos: (videos: Video[]) => void;
+}
+
+export const VideoList = ({ videos, setVideos }: VideoListProps) => {
   const { toast } = useToast();
-  const [videos, setVideos] = useState<Video[]>([]);
   const [editingVideo, setEditingVideo] = useState<Video | null>(null);
   const [newTitle, setNewTitle] = useState("");
   const [newDescription, setNewDescription] = useState("");
@@ -58,6 +64,14 @@ export const VideoList = () => {
     }
   };
 
+  if (videos.length === 0) {
+    return (
+      <div className="text-center text-gray-500 py-12">
+        No videos uploaded yet. Click the Upload Video button to get started.
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {videos.map((video) => (
@@ -68,19 +82,18 @@ export const VideoList = () => {
             thumbnail={video.thumbnail}
             description={video.description}
             hashtags={video.hashtags}
+            status={video.status}
           />
           <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
             <Dialog>
-              <DialogTrigger asChild>
-                <Button
-                  variant="secondary"
-                  size="icon"
-                  className="bg-black/50 hover:bg-black/70"
-                  onClick={() => handleEdit(video)}
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
-              </DialogTrigger>
+              <Button
+                variant="secondary"
+                size="icon"
+                className="bg-black/50 hover:bg-black/70"
+                onClick={() => handleEdit(video)}
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Edit Video Details</DialogTitle>
