@@ -7,41 +7,50 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
+    // Validate request
+    if (!req.body) {
+      throw new Error('No request body')
+    }
+
     const formData = await req.formData()
-    const file = formData.get('video')
+    const video = formData.get('video')
     const title = formData.get('title')
     const description = formData.get('description')
     const userId = formData.get('userId')
 
-    if (!file || !title || !userId) {
-      return new Response(
-        JSON.stringify({ error: 'Missing required fields' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      )
+    console.log('Received upload request:', { title, description, userId })
+
+    if (!video || !title || !userId) {
+      throw new Error('Missing required fields')
     }
 
+    // Initialize Supabase client
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const fileExt = file.name.split('.').pop()
+    // Upload video to storage
+    const fileExt = video instanceof File ? video.name.split('.').pop() : 'mp4'
     const filePath = `${crypto.randomUUID()}.${fileExt}`
 
-    // Upload video to storage
+    console.log('Uploading video to storage:', filePath)
+
     const { data: storageData, error: uploadError } = await supabase.storage
       .from('videos')
-      .upload(filePath, file, {
-        contentType: file.type,
+      .upload(filePath, video, {
+        contentType: video instanceof File ? video.type : 'video/mp4',
         upsert: false
       })
 
     if (uploadError) {
+      console.error('Upload error:', uploadError)
       throw uploadError
     }
 
@@ -50,7 +59,9 @@ serve(async (req) => {
       .from('videos')
       .getPublicUrl(filePath)
 
-    // Create video record in database
+    console.log('Video uploaded successfully:', publicUrl)
+
+    // Create video record
     const { data: videoData, error: dbError } = await supabase
       .from('videos')
       .insert({
@@ -63,12 +74,13 @@ serve(async (req) => {
       .single()
 
     if (dbError) {
+      console.error('Database error:', dbError)
       // Cleanup uploaded file if database insert fails
       await supabase.storage.from('videos').remove([filePath])
       throw dbError
     }
 
-    // Initialize performance metrics for the video
+    // Initialize performance metrics
     const { error: metricsError } = await supabase
       .from('performance_metrics')
       .insert({
@@ -76,7 +88,7 @@ serve(async (req) => {
       })
 
     if (metricsError) {
-      console.error('Failed to initialize metrics:', metricsError)
+      console.error('Metrics initialization error:', metricsError)
     }
 
     return new Response(
@@ -85,19 +97,26 @@ serve(async (req) => {
         video: videoData
       }),
       { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json'
+        },
         status: 200 
       }
     )
 
   } catch (error) {
+    console.error('Function error:', error)
     return new Response(
       JSON.stringify({ 
         error: 'Failed to upload video',
         details: error.message 
       }),
       { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json'
+        },
         status: 500 
       }
     )
