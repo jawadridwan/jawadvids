@@ -9,7 +9,153 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      engagement: {
+        Row: {
+          content: string | null
+          created_at: string | null
+          id: string
+          type: string | null
+          user_id: string | null
+          video_id: string | null
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string | null
+          id?: string
+          type?: string | null
+          user_id?: string | null
+          video_id?: string | null
+        }
+        Update: {
+          content?: string | null
+          created_at?: string | null
+          id?: string
+          type?: string | null
+          user_id?: string | null
+          video_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "engagement_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      performance_metrics: {
+        Row: {
+          avg_watch_duration: number | null
+          avg_watch_percentage: number | null
+          comments_count: number | null
+          id: string
+          likes_count: number | null
+          shares_count: number | null
+          updated_at: string | null
+          video_id: string | null
+          views_count: number | null
+        }
+        Insert: {
+          avg_watch_duration?: number | null
+          avg_watch_percentage?: number | null
+          comments_count?: number | null
+          id?: string
+          likes_count?: number | null
+          shares_count?: number | null
+          updated_at?: string | null
+          video_id?: string | null
+          views_count?: number | null
+        }
+        Update: {
+          avg_watch_duration?: number | null
+          avg_watch_percentage?: number | null
+          comments_count?: number | null
+          id?: string
+          likes_count?: number | null
+          shares_count?: number | null
+          updated_at?: string | null
+          video_id?: string | null
+          views_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "performance_metrics_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      videos: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          thumbnail_url: string | null
+          title: string
+          updated_at: string | null
+          url: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string | null
+          url: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string | null
+          url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      views: {
+        Row: {
+          id: string
+          timestamp: string | null
+          video_id: string | null
+          viewer_id: string | null
+          watched_duration: number | null
+          watched_percentage: number | null
+        }
+        Insert: {
+          id?: string
+          timestamp?: string | null
+          video_id?: string | null
+          viewer_id?: string | null
+          watched_duration?: number | null
+          watched_percentage?: number | null
+        }
+        Update: {
+          id?: string
+          timestamp?: string | null
+          video_id?: string | null
+          viewer_id?: string | null
+          watched_duration?: number | null
+          watched_percentage?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "views_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

@@ -1,21 +1,37 @@
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-
-const data = [
-  { date: "Mon", views: 4000 },
-  { date: "Tue", views: 3000 },
-  { date: "Wed", views: 5000 },
-  { date: "Thu", views: 2780 },
-  { date: "Fri", views: 6890 },
-  { date: "Sat", views: 8390 },
-  { date: "Sun", views: 9490 },
-];
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 export const AnalyticsChart = () => {
+  const { data: viewsData } = useQuery({
+    queryKey: ['views-over-time'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('views')
+        .select('timestamp')
+        .order('timestamp', { ascending: true });
+      
+      if (error) throw error;
+
+      // Group views by day
+      const groupedData = data.reduce((acc: any, view) => {
+        const date = new Date(view.timestamp).toLocaleDateString('en-US', { weekday: 'short' });
+        acc[date] = (acc[date] || 0) + 1;
+        return acc;
+      }, {});
+
+      return Object.entries(groupedData).map(([date, views]) => ({
+        date,
+        views,
+      }));
+    }
+  });
+
   return (
     <div className="bg-youtube-dark p-6 rounded-xl h-[300px]">
       <h2 className="text-white text-lg font-medium mb-4">Views Over Time</h2>
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={data}>
+        <AreaChart data={viewsData || []}>
           <defs>
             <linearGradient id="viewsGradient" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#FF0000" stopOpacity={0.3} />
