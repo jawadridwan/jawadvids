@@ -5,9 +5,10 @@ import { Upload } from "lucide-react";
 
 interface ThumbnailUploadProps {
   onThumbnailSelect: (file: File) => void;
+  disabled?: boolean;
 }
 
-export const ThumbnailUpload = ({ onThumbnailSelect }: ThumbnailUploadProps) => {
+export const ThumbnailUpload = ({ onThumbnailSelect, disabled }: ThumbnailUploadProps) => {
   const [preview, setPreview] = useState<string>("");
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -31,9 +32,10 @@ export const ThumbnailUpload = ({ onThumbnailSelect }: ThumbnailUploadProps) => 
           onChange={handleFileChange}
           className="hidden"
           id="thumbnail-upload"
+          disabled={disabled}
         />
         <label htmlFor="thumbnail-upload">
-          <Button type="button" variant="outline" asChild>
+          <Button type="button" variant="outline" asChild disabled={disabled}>
             <span className="flex items-center gap-2">
               <Upload className="h-4 w-4" />
               Upload Thumbnail

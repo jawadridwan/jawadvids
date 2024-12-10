@@ -7,9 +7,10 @@ interface HashtagInputProps {
   hashtags: string[];
   onChange: (hashtags: string[]) => void;
   maxTags?: number;
+  disabled?: boolean;
 }
 
-export const HashtagInput = ({ hashtags, onChange, maxTags = 15 }: HashtagInputProps) => {
+export const HashtagInput = ({ hashtags, onChange, maxTags = 15, disabled }: HashtagInputProps) => {
   const [input, setInput] = useState("");
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -38,6 +39,7 @@ export const HashtagInput = ({ hashtags, onChange, maxTags = 15 }: HashtagInputP
         onKeyDown={handleKeyDown}
         placeholder="Add hashtags (press Enter or Space)"
         maxLength={30}
+        disabled={disabled}
       />
       <div className="flex flex-wrap gap-2">
         {hashtags.map((tag) => (
@@ -50,6 +52,7 @@ export const HashtagInput = ({ hashtags, onChange, maxTags = 15 }: HashtagInputP
             <button
               onClick={() => removeTag(tag)}
               className="ml-1 rounded-full hover:bg-youtube-dark p-0.5"
+              disabled={disabled}
             >
               <X className="h-3 w-3" />
             </button>
