@@ -28,7 +28,7 @@ export const UploadForm = ({ onUploadComplete, onClose }: UploadFormProps) => {
   const handleVideoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 100 * 1024 * 1024) { // 100MB limit
+      if (file.size > 100 * 1024 * 1024) {
         toast({
           title: "File too large",
           description: "Please select a video file under 100MB.",
@@ -78,24 +78,27 @@ export const UploadForm = ({ onUploadComplete, onClose }: UploadFormProps) => {
       formData.append('description', description || '');
       formData.append('userId', user.id);
 
+      // Get the function URL from Supabase
+      const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/upload-video`;
+      console.log('Uploading to:', functionUrl); // Debug log
+
       // Upload video using the Edge Function
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/upload-video`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-          },
-          body: formData,
-        }
-      );
+      const response = await fetch(functionUrl, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+        },
+        body: formData,
+      });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to upload video');
+        const errorData = await response.json().catch(() => ({ message: 'Failed to parse error response' }));
+        console.error('Upload failed:', errorData); // Debug log
+        throw new Error(errorData.message || 'Failed to upload video');
       }
 
       const { video: videoData } = await response.json();
+      console.log('Upload successful:', videoData); // Debug log
 
       // If thumbnail exists, upload it
       if (thumbnail) {
@@ -135,6 +138,7 @@ export const UploadForm = ({ onUploadComplete, onClose }: UploadFormProps) => {
         description: "Your video is now processing and will be available soon.",
       });
     } catch (error: any) {
+      console.error('Upload error:', error); // Debug log
       toast({
         title: "Upload failed",
         description: error.message || "An error occurred while uploading your video.",
