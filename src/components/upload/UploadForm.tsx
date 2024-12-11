@@ -51,6 +51,7 @@ export const UploadForm = ({ onUploadComplete, onClose }: UploadFormProps) => {
           onChange={(e) => setTitle(e.target.value)}
           maxLength={100}
           disabled={uploading}
+          required
         />
         
         <Textarea
@@ -103,7 +104,7 @@ export const UploadForm = ({ onUploadComplete, onClose }: UploadFormProps) => {
         <Button type="button" variant="outline" onClick={onClose} disabled={uploading}>
           Cancel
         </Button>
-        <Button type="submit" disabled={uploading}>
+        <Button type="submit" disabled={uploading || !title || !video}>
           {uploading ? "Uploading..." : "Upload Video"}
         </Button>
       </div>
