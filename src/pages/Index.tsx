@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { AuthComponent } from "@/components/auth/Auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
+import { toast } from "sonner";
 
 interface Video {
   id: string;
@@ -21,11 +22,13 @@ interface Video {
 const Index = () => {
   const [videos, setVideos] = useState<Video[]>([]);
   const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
+      setLoading(false);
     });
 
     // Listen for auth changes
@@ -40,14 +43,21 @@ const Index = () => {
 
   const handleUploadComplete = (videoData: Video) => {
     setVideos(prev => [...prev, videoData]);
+    toast.success("Video uploaded successfully!");
   };
 
-  if (!session) {
+  // Show loading state
+  if (loading) {
     return (
-      <div className="min-h-screen bg-youtube-darker flex items-center justify-center p-4">
-        <AuthComponent />
+      <div className="min-h-screen bg-youtube-darker flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-youtube-red"></div>
       </div>
     );
+  }
+
+  // Show auth component if not authenticated
+  if (!session) {
+    return <AuthComponent />;
   }
 
   return (

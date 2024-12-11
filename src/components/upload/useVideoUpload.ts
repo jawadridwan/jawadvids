@@ -1,9 +1,8 @@
 import { useState } from "react";
-import { useToast } from "../ui/use-toast";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 export const useVideoUpload = (onUploadComplete: (videoData: any) => void) => {
-  const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
 
@@ -16,12 +15,8 @@ export const useVideoUpload = (onUploadComplete: (videoData: any) => void) => {
     visibility: string
   ) => {
     if (!title.trim()) {
-      toast({
-        title: "Title required",
-        description: "Please enter a title for your video.",
-        variant: "destructive",
-      });
-      return;
+      toast.error("Please enter a title for your video.");
+      return false;
     }
 
     setUploading(true);
@@ -32,7 +27,10 @@ export const useVideoUpload = (onUploadComplete: (videoData: any) => void) => {
         data: { user },
       } = await supabase.auth.getUser();
 
-      if (!user) throw new Error("User not authenticated");
+      if (!user) {
+        toast.error("You must be logged in to upload videos");
+        return false;
+      }
 
       // Create form data
       const formData = new FormData();
@@ -54,40 +52,29 @@ export const useVideoUpload = (onUploadComplete: (videoData: any) => void) => {
         body: formData,
       });
 
-      const responseText = await response.text();
-      console.log('Raw response:', responseText);
-
       if (!response.ok) {
-        let errorMessage = 'Failed to upload video';
-        try {
-          const errorData = JSON.parse(responseText);
-          errorMessage = errorData.message || errorMessage;
-        } catch (e) {
-          console.error('Failed to parse error response:', e);
-        }
-        throw new Error(errorMessage);
+        const errorText = await response.text();
+        console.error('Upload failed:', errorText);
+        throw new Error(`Upload failed: ${errorText}`);
       }
 
-      let videoData;
-      try {
-        const jsonResponse = JSON.parse(responseText);
-        videoData = jsonResponse.video;
-      } catch (e) {
-        console.error('Failed to parse success response:', e);
-        throw new Error('Invalid response from server');
-      }
+      const responseData = await response.json();
+      console.log('Upload response:', responseData);
 
-      console.log('Upload successful:', videoData);
+      if (!responseData.video) {
+        throw new Error('Invalid response from server: missing video data');
+      }
 
       // If thumbnail exists, upload it
       if (thumbnail) {
-        const thumbnailPath = `thumbnails/${videoData.id}`;
+        const thumbnailPath = `thumbnails/${responseData.video.id}`;
         const { error: thumbnailError } = await supabase.storage
           .from('videos')
           .upload(thumbnailPath, thumbnail);
 
         if (thumbnailError) {
           console.error('Failed to upload thumbnail:', thumbnailError);
+          toast.error("Thumbnail upload failed, but video was uploaded successfully");
         } else {
           const { data: { publicUrl: thumbnailUrl } } = supabase.storage
             .from('videos')
@@ -96,35 +83,28 @@ export const useVideoUpload = (onUploadComplete: (videoData: any) => void) => {
           await supabase
             .from('videos')
             .update({ thumbnail_url: thumbnailUrl })
-            .eq('id', videoData.id);
+            .eq('id', responseData.video.id);
 
-          videoData.thumbnail_url = thumbnailUrl;
+          responseData.video.thumbnail_url = thumbnailUrl;
         }
       }
 
       onUploadComplete({
-        ...videoData,
+        ...responseData.video,
         hashtags,
         status: 'processing',
         visibility,
       });
 
-      toast({
-        title: "Video uploaded successfully",
-        description: "Your video is now processing and will be available soon.",
-      });
-
+      toast.success("Video uploaded successfully!");
       return true;
     } catch (error: any) {
       console.error('Upload error:', error);
-      toast({
-        title: "Upload failed",
-        description: error.message || "An error occurred while uploading your video.",
-        variant: "destructive",
-      });
+      toast.error(error.message || "An error occurred while uploading your video.");
       return false;
     } finally {
       setUploading(false);
+      setProgress(0);
     }
   };
 
