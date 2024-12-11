@@ -13,6 +13,8 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Received upload request');
+
     // Validate request
     if (!req.body) {
       throw new Error('No request body')
@@ -24,7 +26,7 @@ serve(async (req) => {
     const description = formData.get('description')
     const userId = formData.get('userId')
 
-    console.log('Received upload request:', { title, description, userId })
+    console.log('Received form data:', { title, description, userId });
 
     if (!video || !title || !userId) {
       throw new Error('Missing required fields')
