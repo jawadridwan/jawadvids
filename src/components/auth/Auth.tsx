@@ -76,39 +76,41 @@ export const AuthComponent = () => {
         </div>
       </motion.div>
 
-      <style jsx global>{`
-        .auth-container {
-          width: 100%;
-        }
-        .auth-button {
-          background: linear-gradient(to right, #0066ff, #00ccff) !important;
-          color: white !important;
-          transition: all 0.3s ease !important;
-          border: none !important;
-          font-weight: 600 !important;
-          text-transform: uppercase !important;
-          letter-spacing: 0.5px !important;
-        }
-        .auth-button:hover {
-          opacity: 0.9 !important;
-          transform: translateY(-1px) !important;
-        }
-        .auth-input {
-          background: rgba(255, 255, 255, 0.05) !important;
-          border: 1px solid rgba(255, 255, 255, 0.1) !important;
-          color: white !important;
-          transition: all 0.3s ease !important;
-        }
-        .auth-input:focus {
-          border-color: #0066ff !important;
-          box-shadow: 0 0 0 2px rgba(0, 102, 255, 0.2) !important;
-        }
-        .auth-label {
-          color: #999999 !important;
-          font-size: 0.9rem !important;
-          margin-bottom: 0.5rem !important;
-        }
-      `}</style>
+      <style>
+        {`
+          .auth-container {
+            width: 100%;
+          }
+          .auth-button {
+            background: linear-gradient(to right, #0066ff, #00ccff) !important;
+            color: white !important;
+            transition: all 0.3s ease !important;
+            border: none !important;
+            font-weight: 600 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.5px !important;
+          }
+          .auth-button:hover {
+            opacity: 0.9 !important;
+            transform: translateY(-1px) !important;
+          }
+          .auth-input {
+            background: rgba(255, 255, 255, 0.05) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            color: white !important;
+            transition: all 0.3s ease !important;
+          }
+          .auth-input:focus {
+            border-color: #0066ff !important;
+            box-shadow: 0 0 0 2px rgba(0, 102, 255, 0.2) !important;
+          }
+          .auth-label {
+            color: #999999 !important;
+            font-size: 0.9rem !important;
+            margin-bottom: 0.5rem !important;
+          }
+        `}
+      </style>
     </div>
   );
 };

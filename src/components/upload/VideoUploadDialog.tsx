@@ -11,17 +11,6 @@ interface VideoUploadDialogProps {
 export const VideoUploadDialog = ({ onUploadComplete }: VideoUploadDialogProps) => {
   const [open, setOpen] = useState(false);
 
-  const handleUploadComplete = (videoData: any) => {
-    onUploadComplete(videoData);
-    setOpen(false);
-    toast.success("Video uploaded successfully!");
-  };
-
-  const handleUploadError = (error: Error) => {
-    console.error("Upload error:", error);
-    toast.error("Upload failed: " + error.message);
-  };
-
   return (
     <>
       <Button 
@@ -36,9 +25,8 @@ export const VideoUploadDialog = ({ onUploadComplete }: VideoUploadDialogProps) 
             <DialogTitle className="text-xl font-bold text-white">Upload Video</DialogTitle>
           </DialogHeader>
           <UploadForm 
-            onSuccess={handleUploadComplete}
-            onError={handleUploadError}
-            onCancel={() => setOpen(false)}
+            onUploadComplete={onUploadComplete}
+            onClose={() => setOpen(false)}
           />
         </DialogContent>
       </Dialog>
