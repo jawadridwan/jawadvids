@@ -35,3 +35,13 @@
     @apply bg-background text-foreground;
   }
 }
+
+@keyframes hue-rotate {
+  100% {
+    filter: hue-rotate(360deg);
+  }
+}
+
+.animate-hue-rotate {
+  animation: hue-rotate 1s linear infinite;
+}
