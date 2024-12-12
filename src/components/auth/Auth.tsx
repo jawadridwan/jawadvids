@@ -1,28 +1,25 @@
-import { motion } from "framer-motion";
 import { useState } from "react";
 import { LoginSection } from "./LoginSection";
 import { SignupSection } from "./SignupSection";
+import { motion } from "framer-motion";
 
 export const AuthComponent = () => {
-  const [isLogin, setIsLogin] = useState(true);
+  const [isSignUp, setIsSignUp] = useState(false);
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-black p-4">
+    <div className="flex justify-center items-center min-h-screen bg-black">
       <motion.div 
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-[400px] h-[500px] relative overflow-hidden rounded-2xl bg-black shadow-[0_0_50px_#0ef] hover:animate-hue-rotate"
+        className="relative w-[400px] h-[500px] bg-black shadow-[0_0_50px_#0ef] rounded-[20px] p-10 overflow-hidden group hover:animate-hue-rotate"
+        animate={{ scale: 1 }}
+        initial={{ scale: 0.95 }}
+        whileHover={{ scale: 1.02 }}
+        transition={{ duration: 0.2 }}
       >
-        <div className="relative h-full flex">
-          <motion.div 
-            initial={false}
-            animate={{ y: isLogin ? 0 : '-100%' }}
-            transition={{ duration: 1, ease: 'easeInOut' }}
-            className="flex flex-col min-h-[200%]"
-          >
-            <LoginSection isActive={isLogin} onSignUpClick={() => setIsLogin(false)} />
-            <SignupSection isActive={!isLogin} onSignInClick={() => setIsLogin(true)} />
-          </motion.div>
+        <div className={`transition-transform duration-1000 ease-in-out ${isSignUp ? 'translate-y-[-450px]' : ''}`}>
+          <LoginSection onSignUpClick={() => setIsSignUp(true)} />
+        </div>
+        <div className={`absolute top-[450px] left-0 w-full transition-transform duration-1000 ease-in-out ${isSignUp ? 'translate-y-[-450px]' : ''}`}>
+          <SignupSection onSignInClick={() => setIsSignUp(false)} />
         </div>
       </motion.div>
     </div>
