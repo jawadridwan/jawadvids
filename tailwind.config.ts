@@ -65,9 +65,13 @@ export default {
           "0%": { opacity: "0", transform: "translateY(10px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
+        "hue-rotate": {
+          "100%": { filter: "hue-rotate(360deg)" },
+        },
       },
       animation: {
         "fade-in": "fade-in 0.5s ease-out",
+        "hue-rotate": "hue-rotate 1s linear infinite",
       },
     },
   },

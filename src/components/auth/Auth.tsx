@@ -11,27 +11,18 @@ export const AuthComponent = () => {
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-[900px] h-[600px] relative overflow-hidden rounded-xl"
+        className="w-full max-w-[400px] h-[500px] relative overflow-hidden rounded-2xl bg-black shadow-[0_0_50px_#0ef] hover:animate-hue-rotate"
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-[#000000] to-[#1a1a1a] rounded-xl" />
-        
         <div className="relative h-full flex">
           <motion.div 
             initial={false}
-            animate={{ x: isLogin ? 0 : '-50%' }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="flex min-w-[200%]"
+            animate={{ y: isLogin ? 0 : '-100%' }}
+            transition={{ duration: 1, ease: 'easeInOut' }}
+            className="flex flex-col min-h-[200%]"
           >
-            <LoginSection isActive={isLogin} />
-            <SignupSection isActive={!isLogin} />
+            <LoginSection isActive={isLogin} onSignUpClick={() => setIsLogin(false)} />
+            <SignupSection isActive={!isLogin} onSignInClick={() => setIsLogin(true)} />
           </motion.div>
-
-          <button
-            onClick={() => setIsLogin(!isLogin)}
-            className="absolute top-4 right-4 px-4 py-2 rounded-full bg-blue-500 hover:bg-blue-600 text-white text-sm transition-colors"
-          >
-            {isLogin ? 'Need an account?' : 'Already have an account?'}
-          </button>
         </div>
       </motion.div>
     </div>
