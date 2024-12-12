@@ -47,7 +47,7 @@ export const SignupSection = ({ onSignInClick }: SignupSectionProps) => {
           onChange={(e) => setEmail(e.target.value)}
           className="w-full h-10 text-base text-white bg-transparent border-none outline-none px-1"
         />
-        <label className={`absolute left-1 ${email ? 'top-[-5px]' : 'top-1/2'} transform ${email ? 'translate-y-0' : '-translate-y-1/2'} text-white pointer-events-none transition-all duration-500`}>
+        <label className={`absolute left-1 ${email ? 'top-[-5px] text-sm' : 'top-1/2'} transform ${email ? 'translate-y-0' : '-translate-y-1/2'} text-white pointer-events-none transition-all duration-500`}>
           Email
         </label>
       </div>
@@ -60,12 +60,12 @@ export const SignupSection = ({ onSignInClick }: SignupSectionProps) => {
           onChange={(e) => setPassword(e.target.value)}
           className="w-full h-10 text-base text-white bg-transparent border-none outline-none px-1"
         />
-        <label className={`absolute left-1 ${password ? 'top-[-5px]' : 'top-1/2'} transform ${password ? 'translate-y-0' : '-translate-y-1/2'} text-white pointer-events-none transition-all duration-500`}>
+        <label className={`absolute left-1 ${password ? 'top-[-5px] text-sm' : 'top-1/2'} transform ${password ? 'translate-y-0' : '-translate-y-1/2'} text-white pointer-events-none transition-all duration-500`}>
           Password
         </label>
       </div>
 
-      <div className="flex items-center mb-4 text-white">
+      <div className="flex items-center mb-4 text-white w-full">
         <input
           type="checkbox"
           checked={agreed}
