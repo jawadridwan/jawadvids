@@ -6,6 +6,8 @@ import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { useToast } from "./ui/use-toast";
 import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Video {
   id: string;
@@ -14,6 +16,7 @@ interface Video {
   hashtags?: string[];
   views: string;
   thumbnail: string;
+  url?: string;
   file?: File;
   uploadDate: string;
   status: 'processing' | 'ready' | 'failed';
@@ -24,19 +27,61 @@ interface VideoListProps {
   setVideos: (videos: Video[]) => void;
 }
 
-export const VideoList = ({ videos, setVideos }: VideoListProps) => {
+export const VideoList = ({ videos: initialVideos, setVideos }: VideoListProps) => {
   const { toast } = useToast();
   const [editingVideo, setEditingVideo] = useState<Video | null>(null);
   const [newTitle, setNewTitle] = useState("");
   const [newDescription, setNewDescription] = useState("");
   const [newHashtags, setNewHashtags] = useState("");
+  const queryClient = useQueryClient();
 
-  const handleDelete = (videoId: string) => {
-    setVideos(videos.filter(video => video.id !== videoId));
-    toast({
-      title: "Video deleted",
-      description: "Your video has been removed.",
-    });
+  // Fetch videos using React Query
+  const { data: videos = initialVideos } = useQuery({
+    queryKey: ['videos'],
+    queryFn: async () => {
+      console.log('Fetching videos from Supabase');
+      const { data: videos, error } = await supabase
+        .from('videos')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching videos:', error);
+        throw error;
+      }
+
+      return videos.map(video => ({
+        ...video,
+        views: '0', // You might want to fetch this from performance_metrics
+        status: 'ready' as const,
+        uploadDate: video.created_at,
+      }));
+    },
+    initialData: initialVideos,
+  });
+
+  const handleDelete = async (videoId: string) => {
+    try {
+      const { error } = await supabase
+        .from('videos')
+        .delete()
+        .eq('id', videoId);
+
+      if (error) throw error;
+
+      queryClient.invalidateQueries({ queryKey: ['videos'] });
+      toast({
+        title: "Video deleted",
+        description: "Your video has been removed.",
+      });
+    } catch (error) {
+      console.error('Error deleting video:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete video. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleEdit = (video: Video) => {
@@ -46,25 +91,37 @@ export const VideoList = ({ videos, setVideos }: VideoListProps) => {
     setNewHashtags(video.hashtags?.join(" ") || "");
   };
 
-  const saveEdit = () => {
+  const saveEdit = async () => {
     if (editingVideo && newTitle.trim()) {
-      setVideos(videos.map(v => 
-        v.id === editingVideo.id ? {
-          ...v,
-          title: newTitle,
-          description: newDescription,
-          hashtags: newHashtags.split(" ").filter(tag => tag.startsWith("#")),
-        } : v
-      ));
-      setEditingVideo(null);
-      toast({
-        title: "Changes saved",
-        description: "Your video details have been updated.",
-      });
+      try {
+        const { error } = await supabase
+          .from('videos')
+          .update({
+            title: newTitle,
+            description: newDescription,
+          })
+          .eq('id', editingVideo.id);
+
+        if (error) throw error;
+
+        queryClient.invalidateQueries({ queryKey: ['videos'] });
+        setEditingVideo(null);
+        toast({
+          title: "Changes saved",
+          description: "Your video details have been updated.",
+        });
+      } catch (error) {
+        console.error('Error updating video:', error);
+        toast({
+          title: "Error",
+          description: "Failed to update video. Please try again.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
-  if (videos.length === 0) {
+  if (!videos || videos.length === 0) {
     return (
       <div className="text-center text-gray-500 py-12">
         No videos uploaded yet. Click the Upload Video button to get started.
@@ -83,6 +140,7 @@ export const VideoList = ({ videos, setVideos }: VideoListProps) => {
             description={video.description}
             hashtags={video.hashtags}
             status={video.status}
+            url={video.url}
           />
           <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
             <Dialog>
