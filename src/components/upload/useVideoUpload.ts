@@ -23,11 +23,13 @@ export const useVideoUpload = (onUploadComplete: (videoData: any) => void) => {
     setProgress(0);
 
     try {
+      console.log('Starting video upload process');
       const {
         data: { user },
       } = await supabase.auth.getUser();
 
       if (!user) {
+        console.error('No authenticated user found');
         toast.error("You must be logged in to upload videos");
         return false;
       }
@@ -39,11 +41,20 @@ export const useVideoUpload = (onUploadComplete: (videoData: any) => void) => {
       formData.append('description', description || '');
       formData.append('userId', user.id);
 
+      console.log('Invoking upload-video function with:', {
+        title,
+        description: description ? 'present' : 'not present',
+        userId: user.id,
+        videoName: video.name
+      });
+
       try {
         // Get the function URL from Supabase
         const { data: functionData, error: functionError } = await supabase.functions.invoke('upload-video', {
           body: formData,
         });
+
+        console.log('Function response:', { functionData, functionError });
 
         if (functionError) {
           console.error('Function error:', functionError);
@@ -51,11 +62,13 @@ export const useVideoUpload = (onUploadComplete: (videoData: any) => void) => {
         }
 
         if (!functionData?.video) {
+          console.error('Invalid response:', functionData);
           throw new Error('Invalid response from server: missing video data');
         }
 
         // If thumbnail exists, upload it
         if (thumbnail) {
+          console.log('Uploading thumbnail');
           const thumbnailPath = `thumbnails/${functionData.video.id}`;
           const { error: thumbnailError } = await supabase.storage
             .from('videos')
@@ -78,6 +91,7 @@ export const useVideoUpload = (onUploadComplete: (videoData: any) => void) => {
           }
         }
 
+        console.log('Upload completed successfully');
         onUploadComplete({
           ...functionData.video,
           hashtags,

@@ -18,6 +18,7 @@ serve(async (req) => {
 
     // Validate request
     if (!req.body) {
+      console.error('No request body received');
       throw new Error('No request body')
     }
 
@@ -27,9 +28,19 @@ serve(async (req) => {
     const description = formData.get('description')
     const userId = formData.get('userId')
 
-    console.log('Received form data:', { title, description, userId });
+    console.log('Received form data:', { 
+      title, 
+      description: description ? 'present' : 'not present',
+      userId: userId ? 'present' : 'not present',
+      videoName: video instanceof File ? video.name : 'not a file'
+    });
 
     if (!video || !title || !userId) {
+      console.error('Missing required fields:', {
+        video: !!video,
+        title: !!title,
+        userId: !!userId
+      });
       return new Response(
         JSON.stringify({ error: 'Missing required fields' }),
         { 
@@ -40,12 +51,14 @@ serve(async (req) => {
     }
 
     // Initialize Gemini API
+    console.log('Initializing Gemini API');
     const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
     // Use Gemini to enhance the video description if none was provided
     if (!description || description.trim() === '') {
       try {
+        console.log('Generating description using Gemini');
         const prompt = `Generate a brief, engaging description for a video titled "${title}". Keep it under 100 words and make it appealing for social media.`;
         const result = await model.generateContent(prompt);
         const response = await result.response;
@@ -59,6 +72,7 @@ serve(async (req) => {
     }
 
     // Initialize Supabase client
+    console.log('Initializing Supabase client');
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -96,6 +110,7 @@ serve(async (req) => {
     console.log('Video uploaded successfully:', publicUrl)
 
     // Create video record
+    console.log('Creating video record in database');
     const { data: videoData, error: dbError } = await supabase
       .from('videos')
       .insert({
@@ -119,6 +134,8 @@ serve(async (req) => {
         }
       )
     }
+
+    console.log('Video record created successfully:', videoData);
 
     return new Response(
       JSON.stringify({ 
