@@ -29,7 +29,13 @@ serve(async (req) => {
     console.log('Received form data:', { title, description, userId });
 
     if (!video || !title || !userId) {
-      throw new Error('Missing required fields')
+      return new Response(
+        JSON.stringify({ error: 'Missing required fields' }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400 
+        }
+      )
     }
 
     // Initialize Supabase client
@@ -53,7 +59,13 @@ serve(async (req) => {
 
     if (uploadError) {
       console.error('Upload error:', uploadError)
-      throw uploadError
+      return new Response(
+        JSON.stringify({ error: 'Failed to upload file', details: uploadError }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500 
+        }
+      )
     }
 
     // Get public URL
@@ -79,18 +91,13 @@ serve(async (req) => {
       console.error('Database error:', dbError)
       // Cleanup uploaded file if database insert fails
       await supabase.storage.from('videos').remove([filePath])
-      throw dbError
-    }
-
-    // Initialize performance metrics
-    const { error: metricsError } = await supabase
-      .from('performance_metrics')
-      .insert({
-        video_id: videoData.id,
-      })
-
-    if (metricsError) {
-      console.error('Metrics initialization error:', metricsError)
+      return new Response(
+        JSON.stringify({ error: 'Failed to save video metadata', details: dbError }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500 
+        }
+      )
     }
 
     return new Response(
@@ -99,10 +106,7 @@ serve(async (req) => {
         video: videoData
       }),
       { 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json'
-        },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200 
       }
     )
@@ -111,14 +115,11 @@ serve(async (req) => {
     console.error('Function error:', error)
     return new Response(
       JSON.stringify({ 
-        error: 'Failed to upload video',
+        error: 'An unexpected error occurred', 
         details: error.message 
       }),
       { 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json'
-        },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500 
       }
     )

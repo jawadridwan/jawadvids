@@ -43,7 +43,7 @@ export const useVideoUpload = (onUploadComplete: (videoData: any) => void) => {
       const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/upload-video`;
       console.log('Uploading to:', functionUrl);
 
-      // Upload video using the Edge Function
+      // Upload video using the Edge Function with proper error handling
       const response = await fetch(functionUrl, {
         method: 'POST',
         headers: {
@@ -52,14 +52,23 @@ export const useVideoUpload = (onUploadComplete: (videoData: any) => void) => {
         body: formData,
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Upload failed:', errorText);
-        throw new Error(`Upload failed: ${errorText}`);
+      // Log the raw response for debugging
+      const responseText = await response.text();
+      console.log('Raw response:', responseText);
+
+      // Try to parse the response as JSON
+      let responseData;
+      try {
+        responseData = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('Failed to parse response:', parseError);
+        throw new Error('Server returned invalid JSON response');
       }
 
-      const responseData = await response.json();
-      console.log('Upload response:', responseData);
+      if (!response.ok) {
+        console.error('Upload failed:', responseData);
+        throw new Error(responseData.error || 'Upload failed');
+      }
 
       if (!responseData.video) {
         throw new Error('Invalid response from server: missing video data');
