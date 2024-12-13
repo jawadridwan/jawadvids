@@ -39,44 +39,24 @@ export const useVideoUpload = (onUploadComplete: (videoData: any) => void) => {
       formData.append('description', description || '');
       formData.append('userId', user.id);
 
-      // Get the function URL from Supabase
-      const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/upload-video`;
-      console.log('Uploading to:', functionUrl);
-
       try {
-        // Upload video using the Edge Function
-        const response = await fetch(functionUrl, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-          },
+        // Get the function URL from Supabase
+        const { data: functionData, error: functionError } = await supabase.functions.invoke('upload-video', {
           body: formData,
         });
 
-        // Log the raw response for debugging
-        const responseText = await response.text();
-        console.log('Raw response:', responseText);
-
-        // Try to parse the response as JSON
-        let responseData;
-        try {
-          responseData = JSON.parse(responseText);
-        } catch (parseError) {
-          console.error('Failed to parse response:', parseError);
-          throw new Error('Server returned invalid JSON response');
+        if (functionError) {
+          console.error('Function error:', functionError);
+          throw new Error(functionError.message || 'Upload failed');
         }
 
-        if (!response.ok) {
-          throw new Error(responseData.error || 'Upload failed');
-        }
-
-        if (!responseData.video) {
+        if (!functionData?.video) {
           throw new Error('Invalid response from server: missing video data');
         }
 
         // If thumbnail exists, upload it
         if (thumbnail) {
-          const thumbnailPath = `thumbnails/${responseData.video.id}`;
+          const thumbnailPath = `thumbnails/${functionData.video.id}`;
           const { error: thumbnailError } = await supabase.storage
             .from('videos')
             .upload(thumbnailPath, thumbnail);
@@ -92,14 +72,14 @@ export const useVideoUpload = (onUploadComplete: (videoData: any) => void) => {
             await supabase
               .from('videos')
               .update({ thumbnail_url: thumbnailUrl })
-              .eq('id', responseData.video.id);
+              .eq('id', functionData.video.id);
 
-            responseData.video.thumbnail_url = thumbnailUrl;
+            functionData.video.thumbnail_url = thumbnailUrl;
           }
         }
 
         onUploadComplete({
-          ...responseData.video,
+          ...functionData.video,
           hashtags,
           status: 'processing',
           visibility,

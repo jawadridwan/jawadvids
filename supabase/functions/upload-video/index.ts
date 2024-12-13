@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
+import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai@0.1.3"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -36,6 +37,25 @@ serve(async (req) => {
           status: 400 
         }
       )
+    }
+
+    // Initialize Gemini API
+    const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+
+    // Use Gemini to enhance the video description if none was provided
+    if (!description || description.trim() === '') {
+      try {
+        const prompt = `Generate a brief, engaging description for a video titled "${title}". Keep it under 100 words and make it appealing for social media.`;
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const enhancedDescription = response.text();
+        console.log('Generated description:', enhancedDescription);
+        formData.set('description', enhancedDescription);
+      } catch (error) {
+        console.error('Error generating description:', error);
+        // Continue with upload even if description generation fails
+      }
     }
 
     // Initialize Supabase client
@@ -80,7 +100,7 @@ serve(async (req) => {
       .from('videos')
       .insert({
         title,
-        description,
+        description: formData.get('description'),
         url: publicUrl,
         user_id: userId,
       })
@@ -98,18 +118,6 @@ serve(async (req) => {
           status: 500 
         }
       )
-    }
-
-    // Initialize performance metrics
-    const { error: metricsError } = await supabase
-      .from('performance_metrics')
-      .insert({
-        video_id: videoData.id,
-      })
-
-    if (metricsError) {
-      console.warn('Metrics initialization error:', metricsError)
-      // Don't fail the upload if metrics initialization fails
     }
 
     return new Response(
