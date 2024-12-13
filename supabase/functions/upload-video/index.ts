@@ -100,6 +100,18 @@ serve(async (req) => {
       )
     }
 
+    // Initialize performance metrics
+    const { error: metricsError } = await supabase
+      .from('performance_metrics')
+      .insert({
+        video_id: videoData.id,
+      })
+
+    if (metricsError) {
+      console.warn('Metrics initialization error:', metricsError)
+      // Don't fail the upload if metrics initialization fails
+    }
+
     return new Response(
       JSON.stringify({ 
         message: 'Video uploaded successfully',

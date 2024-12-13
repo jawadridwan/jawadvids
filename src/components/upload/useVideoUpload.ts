@@ -43,70 +43,74 @@ export const useVideoUpload = (onUploadComplete: (videoData: any) => void) => {
       const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/upload-video`;
       console.log('Uploading to:', functionUrl);
 
-      // Upload video using the Edge Function with proper error handling
-      const response = await fetch(functionUrl, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-        },
-        body: formData,
-      });
-
-      // Log the raw response for debugging
-      const responseText = await response.text();
-      console.log('Raw response:', responseText);
-
-      // Try to parse the response as JSON
-      let responseData;
       try {
-        responseData = JSON.parse(responseText);
-      } catch (parseError) {
-        console.error('Failed to parse response:', parseError);
-        throw new Error('Server returned invalid JSON response');
-      }
+        // Upload video using the Edge Function
+        const response = await fetch(functionUrl, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          },
+          body: formData,
+        });
 
-      if (!response.ok) {
-        console.error('Upload failed:', responseData);
-        throw new Error(responseData.error || 'Upload failed');
-      }
+        // Log the raw response for debugging
+        const responseText = await response.text();
+        console.log('Raw response:', responseText);
 
-      if (!responseData.video) {
-        throw new Error('Invalid response from server: missing video data');
-      }
-
-      // If thumbnail exists, upload it
-      if (thumbnail) {
-        const thumbnailPath = `thumbnails/${responseData.video.id}`;
-        const { error: thumbnailError } = await supabase.storage
-          .from('videos')
-          .upload(thumbnailPath, thumbnail);
-
-        if (thumbnailError) {
-          console.error('Failed to upload thumbnail:', thumbnailError);
-          toast.error("Thumbnail upload failed, but video was uploaded successfully");
-        } else {
-          const { data: { publicUrl: thumbnailUrl } } = supabase.storage
-            .from('videos')
-            .getPublicUrl(thumbnailPath);
-
-          await supabase
-            .from('videos')
-            .update({ thumbnail_url: thumbnailUrl })
-            .eq('id', responseData.video.id);
-
-          responseData.video.thumbnail_url = thumbnailUrl;
+        // Try to parse the response as JSON
+        let responseData;
+        try {
+          responseData = JSON.parse(responseText);
+        } catch (parseError) {
+          console.error('Failed to parse response:', parseError);
+          throw new Error('Server returned invalid JSON response');
         }
+
+        if (!response.ok) {
+          throw new Error(responseData.error || 'Upload failed');
+        }
+
+        if (!responseData.video) {
+          throw new Error('Invalid response from server: missing video data');
+        }
+
+        // If thumbnail exists, upload it
+        if (thumbnail) {
+          const thumbnailPath = `thumbnails/${responseData.video.id}`;
+          const { error: thumbnailError } = await supabase.storage
+            .from('videos')
+            .upload(thumbnailPath, thumbnail);
+
+          if (thumbnailError) {
+            console.error('Failed to upload thumbnail:', thumbnailError);
+            toast.error("Thumbnail upload failed, but video was uploaded successfully");
+          } else {
+            const { data: { publicUrl: thumbnailUrl } } = supabase.storage
+              .from('videos')
+              .getPublicUrl(thumbnailPath);
+
+            await supabase
+              .from('videos')
+              .update({ thumbnail_url: thumbnailUrl })
+              .eq('id', responseData.video.id);
+
+            responseData.video.thumbnail_url = thumbnailUrl;
+          }
+        }
+
+        onUploadComplete({
+          ...responseData.video,
+          hashtags,
+          status: 'processing',
+          visibility,
+        });
+
+        toast.success("Video uploaded successfully!");
+        return true;
+      } catch (error: any) {
+        console.error('Upload error:', error);
+        throw error;
       }
-
-      onUploadComplete({
-        ...responseData.video,
-        hashtags,
-        status: 'processing',
-        visibility,
-      });
-
-      toast.success("Video uploaded successfully!");
-      return true;
     } catch (error: any) {
       console.error('Upload error:', error);
       toast.error(error.message || "An error occurred while uploading your video.");
