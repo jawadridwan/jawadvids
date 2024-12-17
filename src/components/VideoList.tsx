@@ -14,6 +14,10 @@ interface Video {
   file?: File;
   uploadDate: string;
   status: 'processing' | 'ready' | 'failed';
+  created_at: string;
+  updated_at: string;
+  user_id: string;
+  thumbnail_url: string;
 }
 
 interface VideoListProps {
@@ -42,9 +46,17 @@ export const VideoList = ({ videos: initialVideos, setVideos }: VideoListProps) 
         views: '0',
         status: 'ready' as const,
         uploadDate: video.created_at,
+        thumbnail: video.thumbnail_url || '/placeholder.svg',
+        hashtags: [], // Initialize empty hashtags array if none exists
       }));
     },
-    initialData: initialVideos,
+    initialData: initialVideos.map(video => ({
+      ...video,
+      created_at: video.uploadDate,
+      updated_at: video.uploadDate,
+      user_id: '', // Provide default value
+      thumbnail_url: video.thumbnail,
+    })),
   });
 
   if (!videos || videos.length === 0) {
