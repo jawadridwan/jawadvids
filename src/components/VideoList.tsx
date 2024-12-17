@@ -7,7 +7,7 @@ interface Video {
   id: string;
   title: string;
   description?: string;
-  hashtags?: string[];
+  hashtags: string[];
   views: string;
   thumbnail: string;
   url?: string;
@@ -46,7 +46,11 @@ export const VideoList = ({ videos: initialVideos, setVideos }: VideoListProps) 
         status: 'ready' as const,
         uploadDate: video.created_at,
         thumbnail: video.thumbnail_url || '/placeholder.svg',
-        hashtags: [], // Initialize empty hashtags array if none exists
+        hashtags: [], // Initialize empty hashtags array
+        created_at: video.created_at,
+        updated_at: video.updated_at,
+        user_id: video.user_id,
+        thumbnail_url: video.thumbnail_url,
       }));
     },
     initialData: initialVideos.map(video => ({
@@ -56,6 +60,7 @@ export const VideoList = ({ videos: initialVideos, setVideos }: VideoListProps) 
       user_id: video.user_id || '',
       thumbnail_url: video.thumbnail,
       status: 'ready' as const,
+      hashtags: video.hashtags || [],
     })),
   });
 
