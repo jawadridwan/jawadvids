@@ -39,6 +39,86 @@ export type Database = {
         }
         Relationships: []
       }
+      comment_reactions: {
+        Row: {
+          comment_id: string | null
+          created_at: string
+          id: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          comment_id?: string | null
+          created_at?: string
+          id?: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          comment_id?: string | null
+          created_at?: string
+          id?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comment_reactions_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comments: {
+        Row: {
+          content: string
+          created_at: string
+          deleted_at: string | null
+          id: string
+          parent_id: string | null
+          updated_at: string
+          user_id: string
+          video_id: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          parent_id?: string | null
+          updated_at?: string
+          user_id: string
+          video_id?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          parent_id?: string | null
+          updated_at?: string
+          user_id?: string
+          video_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       engagement: {
         Row: {
           content: string | null
@@ -73,6 +153,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      hashtags: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          content: Json
+          created_at: string
+          id: string
+          read: boolean | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          content: Json
+          created_at?: string
+          id?: string
+          read?: boolean | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          id?: string
+          read?: boolean | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       performance_metrics: {
         Row: {
@@ -118,6 +243,72 @@ export type Database = {
           },
         ]
       }
+      playlist_videos: {
+        Row: {
+          added_at: string
+          playlist_id: string
+          position: number
+          video_id: string
+        }
+        Insert: {
+          added_at?: string
+          playlist_id: string
+          position: number
+          video_id: string
+        }
+        Update: {
+          added_at?: string
+          playlist_id?: string
+          position?: number
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "playlist_videos_playlist_id_fkey"
+            columns: ["playlist_id"]
+            isOneToOne: false
+            referencedRelation: "playlists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "playlist_videos_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      playlists: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          title: string
+          updated_at: string
+          user_id: string
+          visibility: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          title: string
+          updated_at?: string
+          user_id: string
+          visibility?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+          visibility?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -141,6 +332,68 @@ export type Database = {
           username?: string | null
         }
         Relationships: []
+      }
+      reactions: {
+        Row: {
+          created_at: string
+          id: string
+          type: string
+          user_id: string
+          video_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          type: string
+          user_id: string
+          video_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          type?: string
+          user_id?: string
+          video_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reactions_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      video_hashtags: {
+        Row: {
+          hashtag_id: string
+          video_id: string
+        }
+        Insert: {
+          hashtag_id: string
+          video_id: string
+        }
+        Update: {
+          hashtag_id?: string
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_hashtags_hashtag_id_fkey"
+            columns: ["hashtag_id"]
+            isOneToOne: false
+            referencedRelation: "hashtags"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_hashtags_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       videos: {
         Row: {

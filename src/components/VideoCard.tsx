@@ -1,7 +1,8 @@
 import { Badge } from "./ui/badge";
 import { cn } from "@/lib/utils";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
+import { VideoPlayer } from "./video/VideoPlayer";
 
 interface VideoCardProps {
   title: string;
@@ -25,37 +26,9 @@ export const VideoCard = ({
   url 
 }: VideoCardProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
 
-  useEffect(() => {
-    // Log video loading status
-    if (videoRef.current) {
-      console.log('Video element loaded:', {
-        url,
-        readyState: videoRef.current.readyState,
-        networkState: videoRef.current.networkState
-      });
-    }
-  }, [url]);
-
-  const handlePlayPause = () => {
-    if (!videoRef.current) return;
-
-    if (isPlaying) {
-      videoRef.current.pause();
-    } else {
-      // Handle playback errors
-      videoRef.current.play().catch(error => {
-        console.error('Video playback error:', error);
-        toast.error("Error playing video. Please try again.");
-      });
-    }
-    setIsPlaying(!isPlaying);
-  };
-
-  const handleVideoError = (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
-    console.error('Video error:', e);
-    toast.error("Error loading video. Please try again later.");
+  const handleTimeUpdate = (currentTime: number, duration: number) => {
+    console.log('Video progress:', Math.round((currentTime / duration) * 100), '%');
   };
 
   return (
@@ -63,18 +36,14 @@ export const VideoCard = ({
       "bg-youtube-dark rounded-xl overflow-hidden animate-fade-in hover:scale-105 transition-transform",
       className
     )}>
-      <div className="relative" onClick={handlePlayPause}>
+      <div className="relative">
         {url && status === 'ready' ? (
-          <video
-            ref={videoRef}
-            className="w-full aspect-video object-cover cursor-pointer"
-            poster={thumbnail || "/placeholder.svg"}
-            onError={handleVideoError}
-            playsInline
-          >
-            <source src={url} type="video/mp4" />
-            Your browser does not support the video tag.
-          </video>
+          <VideoPlayer
+            url={url}
+            thumbnail={thumbnail}
+            onTimeUpdate={handleTimeUpdate}
+            className="w-full aspect-video"
+          />
         ) : (
           <img 
             src={thumbnail || "/placeholder.svg"} 
