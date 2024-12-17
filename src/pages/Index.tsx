@@ -6,18 +6,7 @@ import { AuthComponent } from "@/components/auth/Auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
 import { toast } from "sonner";
-
-interface Video {
-  id: string;
-  title: string;
-  description?: string;
-  hashtags?: string[];
-  views: string;
-  thumbnail: string;
-  file?: File;
-  uploadDate: string;
-  status: 'processing' | 'ready' | 'failed';
-}
+import { Video } from "@/types/video";
 
 const Index = () => {
   const [videos, setVideos] = useState<Video[]>([]);

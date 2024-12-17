@@ -2,23 +2,7 @@ import { VideoCard } from "./VideoCard";
 import { VideoActions } from "./video/VideoActions";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-
-interface Video {
-  id: string;
-  title: string;
-  description?: string;
-  hashtags: string[];
-  views: string;
-  thumbnail: string;
-  url?: string;
-  file?: File;
-  uploadDate: string;
-  status: 'processing' | 'ready' | 'failed';
-  created_at: string;
-  updated_at: string;
-  user_id: string;
-  thumbnail_url: string | null;
-}
+import { Video } from "@/types/video";
 
 interface VideoListProps {
   videos: Video[];
@@ -41,7 +25,9 @@ export const VideoList = ({ videos: initialVideos, setVideos }: VideoListProps) 
       }
 
       return videos.map(video => ({
-        ...video,
+        id: video.id,
+        title: video.title,
+        description: video.description,
         views: '0',
         status: 'ready' as const,
         uploadDate: video.created_at,
@@ -51,6 +37,7 @@ export const VideoList = ({ videos: initialVideos, setVideos }: VideoListProps) 
         updated_at: video.updated_at,
         user_id: video.user_id,
         thumbnail_url: video.thumbnail_url,
+        url: video.url
       }));
     },
     initialData: initialVideos.map(video => ({
@@ -61,6 +48,8 @@ export const VideoList = ({ videos: initialVideos, setVideos }: VideoListProps) 
       thumbnail_url: video.thumbnail,
       status: 'ready' as const,
       hashtags: video.hashtags || [],
+      description: video.description || null,
+      url: video.url || ''
     })),
   });
 
@@ -80,7 +69,7 @@ export const VideoList = ({ videos: initialVideos, setVideos }: VideoListProps) 
             title={video.title}
             views={video.views}
             thumbnail={video.thumbnail}
-            description={video.description}
+            description={video.description || ''}
             hashtags={video.hashtags}
             status={video.status}
             url={video.url}
