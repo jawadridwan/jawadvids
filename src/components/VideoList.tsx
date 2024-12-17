@@ -26,7 +26,6 @@ interface VideoListProps {
 }
 
 export const VideoList = ({ videos: initialVideos, setVideos }: VideoListProps) => {
-  // Fetch videos using React Query
   const { data: videos = initialVideos } = useQuery({
     queryKey: ['videos'],
     queryFn: async () => {
@@ -54,9 +53,9 @@ export const VideoList = ({ videos: initialVideos, setVideos }: VideoListProps) 
       ...video,
       created_at: video.uploadDate,
       updated_at: video.uploadDate,
-      user_id: video.user_id || '', // Use existing user_id or empty string
+      user_id: video.user_id || '',
       thumbnail_url: video.thumbnail,
-      status: video.status || 'ready',
+      status: 'ready' as const,
     })),
   });
 
