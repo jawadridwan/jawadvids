@@ -14,43 +14,39 @@ export const VideoList = ({ videos: initialVideos, setVideos }: VideoListProps) 
     queryKey: ['videos'],
     queryFn: async () => {
       console.log('Fetching videos from Supabase');
-      const { data: videos, error } = await supabase
+      const { data: videosData, error: videosError } = await supabase
         .from('videos')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .select('*, reactions(type)');
 
-      if (error) {
-        console.error('Error fetching videos:', error);
-        throw error;
+      if (videosError) {
+        console.error('Error fetching videos:', videosError);
+        throw videosError;
       }
 
-      return videos.map(video => ({
-        id: video.id,
-        title: video.title,
-        description: video.description,
-        views: '0',
-        status: 'ready' as const,
-        uploadDate: video.created_at,
-        thumbnail: video.thumbnail_url || '/placeholder.svg',
-        hashtags: [], // Initialize empty hashtags array
-        created_at: video.created_at,
-        updated_at: video.updated_at,
-        user_id: video.user_id,
-        thumbnail_url: video.thumbnail_url,
-        url: video.url
-      }));
+      return videosData.map(video => {
+        const likes = video.reactions?.filter((r: any) => r.type === 'like').length || 0;
+        const dislikes = video.reactions?.filter((r: any) => r.type === 'dislike').length || 0;
+
+        return {
+          id: video.id,
+          title: video.title,
+          description: video.description,
+          views: '0',
+          status: 'ready' as const,
+          uploadDate: video.created_at,
+          thumbnail: video.thumbnail_url || '/placeholder.svg',
+          hashtags: [],
+          created_at: video.created_at,
+          updated_at: video.updated_at,
+          user_id: video.user_id,
+          thumbnail_url: video.thumbnail_url,
+          url: video.url,
+          likes,
+          dislikes
+        };
+      });
     },
-    initialData: initialVideos.map(video => ({
-      ...video,
-      created_at: video.uploadDate,
-      updated_at: video.uploadDate,
-      user_id: video.user_id || '',
-      thumbnail_url: video.thumbnail,
-      status: 'ready' as const,
-      hashtags: video.hashtags || [],
-      description: video.description || null,
-      url: video.url || ''
-    })),
+    initialData: initialVideos,
   });
 
   if (!videos || videos.length === 0) {
@@ -66,6 +62,7 @@ export const VideoList = ({ videos: initialVideos, setVideos }: VideoListProps) 
       {videos.map((video) => (
         <div key={video.id} className="relative group">
           <VideoCard
+            id={video.id}
             title={video.title}
             views={video.views}
             thumbnail={video.thumbnail}
@@ -73,6 +70,8 @@ export const VideoList = ({ videos: initialVideos, setVideos }: VideoListProps) 
             hashtags={video.hashtags}
             status={video.status}
             url={video.url}
+            likes={video.likes}
+            dislikes={video.dislikes}
           />
           <VideoActions video={video} />
         </div>

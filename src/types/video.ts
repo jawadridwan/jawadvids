@@ -13,4 +13,6 @@ export interface Video {
   updated_at: string;
   user_id: string;
   thumbnail_url: string | null;
+  likes?: number;
+  dislikes?: number;
 }

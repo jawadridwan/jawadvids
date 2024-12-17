@@ -12,9 +12,16 @@ interface VideoPlayerProps {
   thumbnail?: string;
   onTimeUpdate?: (currentTime: number, duration: number) => void;
   className?: string;
+  onPlayStateChange?: (isPlaying: boolean) => void;
 }
 
-export const VideoPlayer = ({ url, thumbnail, onTimeUpdate, className }: VideoPlayerProps) => {
+export const VideoPlayer = ({ 
+  url, 
+  thumbnail, 
+  onTimeUpdate, 
+  className,
+  onPlayStateChange 
+}: VideoPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -31,6 +38,8 @@ export const VideoPlayer = ({ url, thumbnail, onTimeUpdate, className }: VideoPl
     if (!video) return;
 
     const handleKeyPress = (e: KeyboardEvent) => {
+      if (!video) return;
+      
       switch (e.key.toLowerCase()) {
         case ' ':
           e.preventDefault();
@@ -87,11 +96,20 @@ export const VideoPlayer = ({ url, thumbnail, onTimeUpdate, className }: VideoPl
     if (!video) return;
 
     if (video.paused) {
+      // Pause all other videos before playing this one
+      document.querySelectorAll('video').forEach(v => {
+        if (v !== video) {
+          v.pause();
+        }
+      });
+      
       video.play();
       setIsPlaying(true);
+      onPlayStateChange?.(true);
     } else {
       video.pause();
       setIsPlaying(false);
+      onPlayStateChange?.(false);
     }
   };
 
@@ -126,16 +144,32 @@ export const VideoPlayer = ({ url, thumbnail, onTimeUpdate, className }: VideoPl
     video.currentTime = Math.max(0, Math.min(video.currentTime + seconds, video.duration));
   };
 
-  const toggleFullscreen = () => {
+  const toggleFullscreen = async () => {
     const container = containerRef.current;
     if (!container) return;
 
-    if (!document.fullscreenElement) {
-      container.requestFullscreen();
-      setIsFullscreen(true);
-    } else {
-      document.exitFullscreen();
-      setIsFullscreen(false);
+    try {
+      if (!document.fullscreenElement) {
+        if (container.requestFullscreen) {
+          await container.requestFullscreen();
+        } else if ((container as any).webkitRequestFullscreen) {
+          await (container as any).webkitRequestFullscreen();
+        } else if ((container as any).msRequestFullscreen) {
+          await (container as any).msRequestFullscreen();
+        }
+        setIsFullscreen(true);
+      } else {
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+        } else if ((document as any).webkitExitFullscreen) {
+          await (document as any).webkitExitFullscreen();
+        } else if ((document as any).msExitFullscreen) {
+          await (document as any).msExitFullscreen();
+        }
+        setIsFullscreen(false);
+      }
+    } catch (error) {
+      console.error('Error toggling fullscreen:', error);
     }
   };
 
@@ -165,6 +199,8 @@ export const VideoPlayer = ({ url, thumbnail, onTimeUpdate, className }: VideoPl
       )}
       onMouseEnter={() => setShowControls(true)}
       onMouseLeave={() => setShowControls(false)}
+      onTouchStart={() => setShowControls(true)}
+      onTouchEnd={() => setTimeout(() => setShowControls(false), 3000)}
     >
       <video
         ref={videoRef}

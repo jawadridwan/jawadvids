@@ -3,8 +3,10 @@ import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { toast } from "sonner";
 import { VideoPlayer } from "./video/VideoPlayer";
+import { VideoReactions } from "./video/VideoReactions";
 
 interface VideoCardProps {
+  id: string;
   title: string;
   views: string;
   thumbnail: string;
@@ -13,9 +15,12 @@ interface VideoCardProps {
   status?: 'processing' | 'ready' | 'failed';
   className?: string;
   url?: string;
+  likes?: number;
+  dislikes?: number;
 }
 
 export const VideoCard = ({ 
+  id,
   title, 
   views, 
   thumbnail, 
@@ -23,7 +28,9 @@ export const VideoCard = ({
   hashtags, 
   status,
   className,
-  url 
+  url,
+  likes = 0,
+  dislikes = 0
 }: VideoCardProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
 
@@ -43,6 +50,7 @@ export const VideoCard = ({
             thumbnail={thumbnail}
             onTimeUpdate={handleTimeUpdate}
             className="w-full aspect-video"
+            onPlayStateChange={setIsPlaying}
           />
         ) : (
           <img 
@@ -72,7 +80,10 @@ export const VideoCard = ({
             </span>
           ))}
         </div>
-        <p className="text-youtube-gray text-sm">{views} views</p>
+        <div className="flex items-center justify-between">
+          <p className="text-youtube-gray text-sm">{views} views</p>
+          <VideoReactions videoId={id} initialLikes={likes} initialDislikes={dislikes} />
+        </div>
       </div>
     </div>
   );
