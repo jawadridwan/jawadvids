@@ -50,27 +50,6 @@ serve(async (req) => {
       )
     }
 
-    // Initialize Gemini API
-    console.log('Initializing Gemini API');
-    const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-
-    // Use Gemini to enhance the video description if none was provided
-    if (!description || description.trim() === '') {
-      try {
-        console.log('Generating description using Gemini');
-        const prompt = `Generate a brief, engaging description for a video titled "${title}". Keep it under 100 words and make it appealing for social media.`;
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const enhancedDescription = response.text();
-        console.log('Generated description:', enhancedDescription);
-        formData.set('description', enhancedDescription);
-      } catch (error) {
-        console.error('Error generating description:', error);
-        // Continue with upload even if description generation fails
-      }
-    }
-
     // Initialize Supabase client
     console.log('Initializing Supabase client');
     const supabase = createClient(
@@ -115,7 +94,7 @@ serve(async (req) => {
       .from('videos')
       .insert({
         title,
-        description: formData.get('description'),
+        description: description || '',
         url: publicUrl,
         user_id: userId,
       })

@@ -17,7 +17,7 @@ interface Video {
   created_at: string;
   updated_at: string;
   user_id: string;
-  thumbnail_url: string;
+  thumbnail_url: string | null;
 }
 
 interface VideoListProps {
@@ -54,8 +54,9 @@ export const VideoList = ({ videos: initialVideos, setVideos }: VideoListProps) 
       ...video,
       created_at: video.uploadDate,
       updated_at: video.uploadDate,
-      user_id: '', // Provide default value
+      user_id: video.user_id || '', // Use existing user_id or empty string
       thumbnail_url: video.thumbnail,
+      status: video.status || 'ready',
     })),
   });
 
