@@ -23,15 +23,14 @@ export const VideoReactions = ({ videoId, initialLikes = 0, initialDislikes = 0 
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
-    const { data: reaction } = await supabase
+    const { data: reactions } = await supabase
       .from('reactions')
       .select('type')
       .eq('video_id', videoId)
-      .eq('user_id', session.user.id)
-      .single();
+      .eq('user_id', session.user.id);
 
-    if (reaction) {
-      setUserReaction(reaction.type as 'like' | 'dislike');
+    if (reactions && reactions.length > 0) {
+      setUserReaction(reactions[0].type as 'like' | 'dislike');
     }
   };
 

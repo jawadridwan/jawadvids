@@ -10,7 +10,7 @@ interface VideoListProps {
 }
 
 export const VideoList = ({ videos: initialVideos, setVideos }: VideoListProps) => {
-  const { data: videos = initialVideos } = useQuery({
+  const { data: videos = initialVideos } = useQuery<Video[]>({
     queryKey: ['videos'],
     queryFn: async () => {
       console.log('Fetching videos from Supabase');
@@ -28,7 +28,7 @@ export const VideoList = ({ videos: initialVideos, setVideos }: VideoListProps) 
         title: video.title,
         description: video.description,
         views: '0',
-        status: 'ready' as const,
+        status: video.status || 'ready' as const,
         uploadDate: video.created_at,
         thumbnail: video.thumbnail_url || '/placeholder.svg',
         hashtags: [],
