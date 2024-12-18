@@ -9,8 +9,8 @@ import { cn } from '@/lib/utils';
 interface VideoControlsProps {
   isPlaying: boolean;
   isFullscreen: boolean;
-  isPiPActive: boolean;
-  preferences: {
+  isPiPActive?: boolean;
+  preferences?: {
     volume: number;
     playbackSpeed: number;
     quality: string;
@@ -21,13 +21,10 @@ interface VideoControlsProps {
   showControls: boolean;
   onPlayPause: () => void;
   onToggleFullscreen: () => void;
-  onTogglePiP: () => void;
-  onToggleCaptions: () => void;
-  onViewModeChange: (mode: 'default' | 'medium' | 'fullscreen') => void;
-  onPreferenceChange: <K extends keyof typeof preferences>(
-    key: K,
-    value: typeof preferences[K]
-  ) => void;
+  onTogglePiP?: () => void;
+  onToggleCaptions?: () => void;
+  onViewModeChange?: (mode: 'default' | 'medium' | 'fullscreen') => void;
+  onPreferenceChange?: (key: string, value: any) => void;
   videoRef: React.RefObject<HTMLVideoElement>;
 }
 
@@ -35,7 +32,14 @@ export const VideoControls = ({
   isPlaying,
   isFullscreen,
   isPiPActive,
-  preferences,
+  preferences = {
+    volume: 1,
+    playbackSpeed: 1,
+    quality: 'auto',
+    autoScroll: true,
+    scrollThreshold: 0.8,
+    scrollSpeed: 1000,
+  },
   showControls,
   onPlayPause,
   onToggleFullscreen,
@@ -66,39 +70,44 @@ export const VideoControls = ({
 
           <VideoVolume
             volume={preferences.volume}
-            onVolumeChange={(value) => onPreferenceChange('volume', value)}
-            videoRef={videoRef}
+            isMuted={preferences.volume === 0}
+            onVolumeChange={(value) => onPreferenceChange?.('volume', value[0])}
+            onToggleMute={() => onPreferenceChange?.('volume', preferences.volume === 0 ? 1 : 0)}
           />
 
           <VideoPlaybackSpeed
             speed={preferences.playbackSpeed}
-            onSpeedChange={(value) => onPreferenceChange('playbackSpeed', value)}
+            onSpeedChange={(value) => onPreferenceChange?.('playbackSpeed', value)}
           />
 
           <VideoQualitySelector
             quality={preferences.quality}
-            onQualityChange={(value) => onPreferenceChange('quality', value)}
+            onQualityChange={(value) => onPreferenceChange?.('quality', value)}
           />
         </div>
 
         <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-white hover:bg-white/10"
-            onClick={onToggleCaptions}
-          >
-            <Subtitles className="w-4 h-4" />
-          </Button>
+          {onToggleCaptions && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white hover:bg-white/10"
+              onClick={onToggleCaptions}
+            >
+              <Subtitles className="w-4 h-4" />
+            </Button>
+          )}
 
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-white hover:bg-white/10"
-            onClick={onTogglePiP}
-          >
-            <PictureInPicture className={cn("w-4 h-4", isPiPActive && "text-primary")} />
-          </Button>
+          {onTogglePiP && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white hover:bg-white/10"
+              onClick={onTogglePiP}
+            >
+              <PictureInPicture className={cn("w-4 h-4", isPiPActive && "text-primary")} />
+            </Button>
+          )}
 
           <Button
             variant="ghost"

@@ -4,15 +4,17 @@ interface KeyboardControlsProps {
   videoRef: React.RefObject<HTMLVideoElement>;
   togglePlay: () => void;
   toggleFullscreen: () => void;
-  toggleMute: () => void;
-  skip: (seconds: number) => void;
+  togglePiP?: () => void;  // Made optional
+  toggleCaptions?: () => void;  // Made optional
+  skip?: (seconds: number) => void;  // Made optional
 }
 
 export const useKeyboardControls = ({
   videoRef,
   togglePlay,
   toggleFullscreen,
-  toggleMute,
+  togglePiP,
+  toggleCaptions,
   skip
 }: KeyboardControlsProps) => {
   useEffect(() => {
@@ -28,14 +30,17 @@ export const useKeyboardControls = ({
         case 'f':
           toggleFullscreen();
           break;
-        case 'm':
-          toggleMute();
+        case 'p':
+          togglePiP?.();
+          break;
+        case 'c':
+          toggleCaptions?.();
           break;
         case 'arrowleft':
-          skip(-5);
+          skip?.(-5);
           break;
         case 'arrowright':
-          skip(5);
+          skip?.(5);
           break;
         default:
           if (!isNaN(parseInt(e.key)) && parseInt(e.key) >= 1 && parseInt(e.key) <= 9) {
@@ -47,5 +52,5 @@ export const useKeyboardControls = ({
 
     document.addEventListener('keydown', handleKeyPress);
     return () => document.removeEventListener('keydown', handleKeyPress);
-  }, [videoRef, togglePlay, toggleFullscreen, toggleMute, skip]);
+  }, [videoRef, togglePlay, toggleFullscreen, togglePiP, toggleCaptions, skip]);
 };

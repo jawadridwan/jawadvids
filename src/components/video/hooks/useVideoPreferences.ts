@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-interface VideoPreferences {
+export interface VideoPreferences {
   volume: number;
   playbackSpeed: number;
   quality: string;
