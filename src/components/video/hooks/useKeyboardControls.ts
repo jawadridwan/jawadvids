@@ -4,9 +4,9 @@ interface KeyboardControlsProps {
   videoRef: React.RefObject<HTMLVideoElement>;
   togglePlay: () => void;
   toggleFullscreen: () => void;
-  togglePiP?: () => void;  // Made optional
-  toggleCaptions?: () => void;  // Made optional
-  skip?: (seconds: number) => void;  // Made optional
+  togglePiP?: () => void;
+  toggleCaptions?: () => void;
+  skip?: (seconds: number) => void;
 }
 
 export const useKeyboardControls = ({
