@@ -16,7 +16,7 @@ export const VideoVolume = ({ volume, isMuted, onVolumeChange, onToggleMute }: V
       <Button
         variant="ghost"
         size="icon"
-        className="text-white hover:bg-white/10"
+        className="text-white"
         onClick={onToggleMute}
       >
         {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
