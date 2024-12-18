@@ -1,9 +1,9 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Play, Pause } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { VideoProgress } from './controls/VideoProgress';
 import { VideoControls } from './controls/VideoControls';
+import { useFullscreen } from './hooks/useFullscreen';
+import { useKeyboardControls } from './hooks/useKeyboardControls';
 
 interface VideoPlayerProps {
   url: string;
@@ -27,45 +27,10 @@ export const VideoPlayer = ({
   const [isMuted, setIsMuted] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
 
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    const handleKeyPress = (e: KeyboardEvent) => {
-      if (!video) return;
-      
-      switch (e.key.toLowerCase()) {
-        case ' ':
-          e.preventDefault();
-          togglePlay();
-          break;
-        case 'f':
-          toggleFullscreen();
-          break;
-        case 'm':
-          toggleMute();
-          break;
-        case 'arrowleft':
-          skip(-5);
-          break;
-        case 'arrowright':
-          skip(5);
-          break;
-        default:
-          if (!isNaN(parseInt(e.key)) && parseInt(e.key) >= 1 && parseInt(e.key) <= 9) {
-            const percentage = (parseInt(e.key) * 10) / 100;
-            video.currentTime = video.duration * percentage;
-          }
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyPress);
-    return () => document.removeEventListener('keydown', handleKeyPress);
-  }, []);
+  const { isFullscreen, toggleFullscreen } = useFullscreen(containerRef);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -94,12 +59,6 @@ export const VideoPlayer = ({
     if (!video) return;
 
     if (video.paused) {
-      document.querySelectorAll('video').forEach(v => {
-        if (v !== video) {
-          v.pause();
-        }
-      });
-      
       video.play();
       setIsPlaying(true);
       onPlayStateChange?.(true);
@@ -135,68 +94,6 @@ export const VideoPlayer = ({
     video.currentTime = Math.max(0, Math.min(video.currentTime + seconds, video.duration));
   };
 
-  const toggleFullscreen = async () => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    try {
-      if (!document.fullscreenElement) {
-        if (container.requestFullscreen) {
-          await container.requestFullscreen();
-        } else if ((container as any).webkitRequestFullscreen) {
-          await (container as any).webkitRequestFullscreen();
-        } else if ((container as any).msRequestFullscreen) {
-          await (container as any).msRequestFullscreen();
-        }
-        setIsFullscreen(true);
-        
-        // Force screen orientation to landscape on mobile
-        if (screen.orientation && screen.orientation.lock) {
-          try {
-            await screen.orientation.lock('landscape');
-          } catch (error) {
-            console.log('Orientation lock failed:', error);
-          }
-        }
-      } else {
-        if (document.exitFullscreen) {
-          await document.exitFullscreen();
-        } else if ((document as any).webkitExitFullscreen) {
-          await (document as any).webkitExitFullscreen();
-        } else if ((document as any).msExitFullscreen) {
-          await (document as any).msExitFullscreen();
-        }
-        setIsFullscreen(false);
-        
-        // Release orientation lock
-        if (screen.orientation && screen.orientation.unlock) {
-          try {
-            screen.orientation.unlock();
-          } catch (error) {
-            console.log('Orientation unlock failed:', error);
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Error toggling fullscreen:', error);
-    }
-  };
-
-  // Add fullscreen change event listener
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-    };
-
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-
-    return () => {
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
-      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
-    };
-  }, []);
-
   const handleSeek = (value: number[]) => {
     const video = videoRef.current;
     if (!video) return;
@@ -214,6 +111,14 @@ export const VideoPlayer = ({
     setPlaybackSpeed(speed);
   };
 
+  useKeyboardControls({
+    videoRef,
+    togglePlay,
+    toggleFullscreen,
+    toggleMute,
+    skip
+  });
+
   return (
     <div 
       ref={containerRef}
@@ -228,7 +133,7 @@ export const VideoPlayer = ({
     >
       <video
         ref={videoRef}
-        className="w-full aspect-video"
+        className="w-full h-full"
         poster={thumbnail}
         onClick={togglePlay}
         playsInline
@@ -237,23 +142,6 @@ export const VideoPlayer = ({
         Your browser does not support the video tag.
       </video>
 
-      {/* Play/Pause Overlay */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="w-16 h-16 text-white opacity-0 group-hover:opacity-100 transition-opacity"
-          onClick={togglePlay}
-        >
-          {isPlaying ? (
-            <Pause className="w-8 h-8" />
-          ) : (
-            <Play className="w-8 h-8" />
-          )}
-        </Button>
-      </div>
-
-      {/* Controls */}
       <div 
         className={cn(
           "absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-4",
