@@ -1,0 +1,35 @@
+import React from 'react';
+import { Volume2, VolumeX } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Slider } from '@/components/ui/slider';
+
+interface VideoVolumeProps {
+  volume: number;
+  isMuted: boolean;
+  onVolumeChange: (value: number[]) => void;
+  onToggleMute: () => void;
+}
+
+export const VideoVolume = ({ volume, isMuted, onVolumeChange, onToggleMute }: VideoVolumeProps) => {
+  return (
+    <div className="flex items-center gap-2">
+      <Button
+        variant="ghost"
+        size="icon"
+        className="text-white"
+        onClick={onToggleMute}
+      >
+        {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+      </Button>
+      <div className="w-24">
+        <Slider
+          value={[isMuted ? 0 : volume]}
+          onValueChange={onVolumeChange}
+          max={1}
+          step={0.1}
+          className="w-24"
+        />
+      </div>
+    </div>
+  );
+};

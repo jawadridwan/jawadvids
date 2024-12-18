@@ -1,11 +1,9 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { 
-  Play, Pause, Volume2, VolumeX, Maximize, Minimize,
-  SkipBack, SkipForward, Settings
-} from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
+import { Play, Pause } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { VideoProgress } from './controls/VideoProgress';
+import { VideoControls } from './controls/VideoControls';
 
 interface VideoPlayerProps {
   url: string;
@@ -96,7 +94,6 @@ export const VideoPlayer = ({
     if (!video) return;
 
     if (video.paused) {
-      // Pause all other videos before playing this one
       document.querySelectorAll('video').forEach(v => {
         if (v !== video) {
           v.pause();
@@ -129,12 +126,6 @@ export const VideoPlayer = ({
     video.volume = newVolume;
     setVolume(newVolume);
     setIsMuted(newVolume === 0);
-  };
-
-  const formatTime = (time: number) => {
-    const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
   const skip = (seconds: number) => {
@@ -237,88 +228,26 @@ export const VideoPlayer = ({
           "transition-opacity duration-300"
         )}
       >
-        {/* Progress bar */}
-        <Slider
-          value={[currentTime ? (currentTime / duration) * 100 : 0]}
-          onValueChange={handleSeek}
-          max={100}
-          step={0.1}
-          className="mb-4"
+        <VideoProgress
+          currentTime={currentTime}
+          duration={duration}
+          onSeek={handleSeek}
         />
 
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-white"
-              onClick={togglePlay}
-            >
-              {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-            </Button>
-
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-white"
-              onClick={toggleMute}
-            >
-              {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-            </Button>
-
-            <div className="w-24">
-              <Slider
-                value={[isMuted ? 0 : volume]}
-                onValueChange={handleVolumeChange}
-                max={1}
-                step={0.1}
-                className="w-24"
-              />
-            </div>
-
-            <span className="text-white text-sm">
-              {formatTime(currentTime)} / {formatTime(duration)}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <div className="relative group">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-white text-sm"
-              >
-                {playbackSpeed}x
-              </Button>
-              <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block">
-                <div className="bg-black/90 rounded-lg p-2">
-                  {[0.5, 1, 1.5, 2].map((speed) => (
-                    <button
-                      key={speed}
-                      className="block w-full text-white text-sm px-4 py-1 hover:bg-white/10 rounded"
-                      onClick={() => handleSpeedChange(speed)}
-                    >
-                      {speed}x
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-white"
-              onClick={toggleFullscreen}
-            >
-              {isFullscreen ? (
-                <Minimize className="w-4 h-4" />
-              ) : (
-                <Maximize className="w-4 h-4" />
-              )}
-            </Button>
-          </div>
-        </div>
+        <VideoControls
+          isPlaying={isPlaying}
+          isFullscreen={isFullscreen}
+          volume={volume}
+          isMuted={isMuted}
+          playbackSpeed={playbackSpeed}
+          currentTime={currentTime}
+          duration={duration}
+          onPlayPause={togglePlay}
+          onToggleFullscreen={toggleFullscreen}
+          onVolumeChange={handleVolumeChange}
+          onToggleMute={toggleMute}
+          onSpeedChange={handleSpeedChange}
+        />
       </div>
     </div>
   );

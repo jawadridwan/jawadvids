@@ -16,3 +16,5 @@ export interface Video {
   likes?: number;
   dislikes?: number;
 }
+
+export type VideoStatus = 'processing' | 'ready' | 'failed';

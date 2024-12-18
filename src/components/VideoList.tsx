@@ -23,28 +23,23 @@ export const VideoList = ({ videos: initialVideos, setVideos }: VideoListProps) 
         throw videosError;
       }
 
-      return videosData.map(video => {
-        const likes = video.reactions?.filter((r: any) => r.type === 'like').length || 0;
-        const dislikes = video.reactions?.filter((r: any) => r.type === 'dislike').length || 0;
-
-        return {
-          id: video.id,
-          title: video.title,
-          description: video.description,
-          views: '0',
-          status: 'ready' as const,
-          uploadDate: video.created_at,
-          thumbnail: video.thumbnail_url || '/placeholder.svg',
-          hashtags: [],
-          created_at: video.created_at,
-          updated_at: video.updated_at,
-          user_id: video.user_id,
-          thumbnail_url: video.thumbnail_url,
-          url: video.url,
-          likes,
-          dislikes
-        };
-      });
+      return videosData.map((video: any) => ({
+        id: video.id,
+        title: video.title,
+        description: video.description,
+        views: '0',
+        status: 'ready' as const,
+        uploadDate: video.created_at,
+        thumbnail: video.thumbnail_url || '/placeholder.svg',
+        hashtags: [],
+        created_at: video.created_at,
+        updated_at: video.updated_at,
+        user_id: video.user_id,
+        thumbnail_url: video.thumbnail_url,
+        url: video.url,
+        likes: video.reactions?.filter((r: any) => r.type === 'like').length || 0,
+        dislikes: video.reactions?.filter((r: any) => r.type === 'dislike').length || 0
+      }));
     },
     initialData: initialVideos,
   });
