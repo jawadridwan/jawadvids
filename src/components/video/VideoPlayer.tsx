@@ -149,6 +149,15 @@ export const VideoPlayer = ({
           await (container as any).msRequestFullscreen();
         }
         setIsFullscreen(true);
+        
+        // Force screen orientation to landscape on mobile
+        if (screen.orientation && screen.orientation.lock) {
+          try {
+            await screen.orientation.lock('landscape');
+          } catch (error) {
+            console.log('Orientation lock failed:', error);
+          }
+        }
       } else {
         if (document.exitFullscreen) {
           await document.exitFullscreen();
@@ -158,11 +167,35 @@ export const VideoPlayer = ({
           await (document as any).msExitFullscreen();
         }
         setIsFullscreen(false);
+        
+        // Release orientation lock
+        if (screen.orientation && screen.orientation.unlock) {
+          try {
+            screen.orientation.unlock();
+          } catch (error) {
+            console.log('Orientation unlock failed:', error);
+          }
+        }
       }
     } catch (error) {
       console.error('Error toggling fullscreen:', error);
     }
   };
+
+  // Add fullscreen change event listener
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+    };
+  }, []);
 
   const handleSeek = (value: number[]) => {
     const video = videoRef.current;
