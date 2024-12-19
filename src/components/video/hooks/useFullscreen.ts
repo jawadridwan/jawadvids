@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, RefObject } from 'react';
 
-export const useFullscreen = (containerRef: React.RefObject<HTMLDivElement>) => {
+export const useFullscreen = (containerRef: RefObject<HTMLDivElement>) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
@@ -27,16 +27,13 @@ export const useFullscreen = (containerRef: React.RefObject<HTMLDivElement>) => 
           await container.requestFullscreen();
         } else if ((container as any).webkitRequestFullscreen) {
           await (container as any).webkitRequestFullscreen();
-        } else if ((container as any).msRequestFullscreen) {
-          await (container as any).msRequestFullscreen();
         }
-        setIsFullscreen(true);
         
         // Handle mobile orientation
-        if ('orientation' in screen) {
+        if ('orientation' in screen && 'unlock' in screen.orientation) {
           try {
             await screen.orientation.unlock();
-            await screen.orientation.lock('landscape');
+            await (screen.orientation as any).lock('landscape');
           } catch (error) {
             console.log('Orientation lock not supported');
           }
@@ -46,13 +43,10 @@ export const useFullscreen = (containerRef: React.RefObject<HTMLDivElement>) => 
           await document.exitFullscreen();
         } else if ((document as any).webkitExitFullscreen) {
           await (document as any).webkitExitFullscreen();
-        } else if ((document as any).msExitFullscreen) {
-          await (document as any).msExitFullscreen();
         }
-        setIsFullscreen(false);
         
         // Release orientation lock
-        if ('orientation' in screen) {
+        if ('orientation' in screen && 'unlock' in screen.orientation) {
           try {
             await screen.orientation.unlock();
           } catch (error) {
