@@ -1,69 +1,73 @@
-import { useState, useEffect } from 'react';
+import { useState, useCallback, useRef } from 'react';
 
-export const useFullscreen = (containerRef: React.RefObject<HTMLDivElement>) => {
+export const useFullscreen = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const elementRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-    };
-
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-
-    return () => {
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
-      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
-    };
-  }, []);
-
-  const toggleFullscreen = async () => {
-    const container = containerRef.current;
-    if (!container) return;
+  const enterFullscreen = useCallback(async () => {
+    const element = elementRef.current;
+    if (!element) return;
 
     try {
-      if (!document.fullscreenElement) {
-        if (container.requestFullscreen) {
-          await container.requestFullscreen();
-        } else if ((container as any).webkitRequestFullscreen) {
-          await (container as any).webkitRequestFullscreen();
-        } else if ((container as any).msRequestFullscreen) {
-          await (container as any).msRequestFullscreen();
-        }
-        setIsFullscreen(true);
-        
-        // Handle mobile orientation
-        if ('orientation' in screen) {
-          try {
-            await screen.orientation.unlock();
-            await screen.orientation.lock('landscape');
-          } catch (error) {
-            console.log('Orientation lock not supported');
-          }
-        }
-      } else {
-        if (document.exitFullscreen) {
-          await document.exitFullscreen();
-        } else if ((document as any).webkitExitFullscreen) {
-          await (document as any).webkitExitFullscreen();
-        } else if ((document as any).msExitFullscreen) {
-          await (document as any).msExitFullscreen();
-        }
-        setIsFullscreen(false);
-        
-        // Release orientation lock
-        if ('orientation' in screen) {
-          try {
-            await screen.orientation.unlock();
-          } catch (error) {
-            console.log('Orientation unlock not supported');
-          }
+      if (element.requestFullscreen) {
+        await element.requestFullscreen();
+      } else if ((element as any).webkitRequestFullscreen) {
+        await (element as any).webkitRequestFullscreen();
+      } else if ((element as any).msRequestFullscreen) {
+        await (element as any).msRequestFullscreen();
+      }
+
+      // Only attempt to lock orientation if the API is available
+      if (screen.orientation && 'lock' in screen.orientation) {
+        try {
+          await screen.orientation.lock('landscape');
+        } catch (error) {
+          console.warn('Failed to lock screen orientation:', error);
         }
       }
-    } catch (error) {
-      console.error('Error toggling fullscreen:', error);
-    }
-  };
 
-  return { isFullscreen, toggleFullscreen };
+      setIsFullscreen(true);
+    } catch (error) {
+      console.error('Error entering fullscreen:', error);
+    }
+  }, []);
+
+  const exitFullscreen = useCallback(async () => {
+    try {
+      if (document.exitFullscreen) {
+        await document.exitFullscreen();
+      } else if ((document as any).webkitExitFullscreen) {
+        await (document as any).webkitExitFullscreen();
+      } else if ((document as any).msExitFullscreen) {
+        await (document as any).msExitFullscreen();
+      }
+
+      // Only attempt to unlock orientation if the API is available
+      if (screen.orientation && 'unlock' in screen.orientation) {
+        try {
+          screen.orientation.unlock();
+        } catch (error) {
+          console.warn('Failed to unlock screen orientation:', error);
+        }
+      }
+
+      setIsFullscreen(false);
+    } catch (error) {
+      console.error('Error exiting fullscreen:', error);
+    }
+  }, []);
+
+  const toggleFullscreen = useCallback(async () => {
+    if (!isFullscreen) {
+      await enterFullscreen();
+    } else {
+      await exitFullscreen();
+    }
+  }, [isFullscreen, enterFullscreen, exitFullscreen]);
+
+  return {
+    isFullscreen,
+    elementRef,
+    toggleFullscreen,
+  };
 };
