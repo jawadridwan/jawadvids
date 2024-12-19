@@ -1,56 +1,43 @@
 import { useState, useEffect, RefObject } from 'react';
 
-export const useFullscreen = (containerRef: RefObject<HTMLDivElement>) => {
+export const useFullscreen = (elementRef: RefObject<HTMLElement>) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
+    const element = elementRef.current;
+    if (!element) return;
+
     const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
+      setIsFullscreen(document.fullscreenElement === element);
     };
 
     document.addEventListener('fullscreenchange', handleFullscreenChange);
-    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-
-    return () => {
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
-      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
-    };
-  }, []);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, [elementRef]);
 
   const toggleFullscreen = async () => {
-    const container = containerRef.current;
-    if (!container) return;
+    const element = elementRef.current;
+    if (!element) return;
 
     try {
       if (!document.fullscreenElement) {
-        if (container.requestFullscreen) {
-          await container.requestFullscreen();
-        } else if ((container as any).webkitRequestFullscreen) {
-          await (container as any).webkitRequestFullscreen();
-        }
-        
-        // Handle mobile orientation
-        if ('orientation' in screen && 'unlock' in screen.orientation) {
+        await element.requestFullscreen();
+        // Only try to lock orientation if the API is available
+        if (screen.orientation && typeof screen.orientation.lock === 'function') {
           try {
-            await screen.orientation.unlock();
             await screen.orientation.lock('landscape');
           } catch (error) {
-            console.log('Orientation lock not supported');
+            console.warn('Failed to lock screen orientation:', error);
           }
         }
       } else {
-        if (document.exitFullscreen) {
-          await document.exitFullscreen();
-        } else if ((document as any).webkitExitFullscreen) {
-          await (document as any).webkitExitFullscreen();
-        }
-        
-        // Release orientation lock
-        if ('orientation' in screen && 'unlock' in screen.orientation) {
+        await document.exitFullscreen();
+        // Only try to unlock orientation if the API is available
+        if (screen.orientation && typeof screen.orientation.unlock === 'function') {
           try {
             await screen.orientation.unlock();
           } catch (error) {
-            console.log('Orientation unlock not supported');
+            console.warn('Failed to unlock screen orientation:', error);
           }
         }
       }

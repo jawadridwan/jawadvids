@@ -17,16 +17,21 @@ export const CreatePlaylistDialog = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error("You must be logged in to create a playlist");
+      return;
+    }
+
     try {
       const { data, error } = await supabase
         .from('playlists')
-        .insert([
-          { 
-            title,
-            description,
-            visibility: 'private'
-          }
-        ])
+        .insert({
+          title,
+          description,
+          visibility: 'private',
+          user_id: user.id
+        })
         .select()
         .single();
 
