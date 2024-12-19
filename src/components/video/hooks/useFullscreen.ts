@@ -33,7 +33,7 @@ export const useFullscreen = (containerRef: RefObject<HTMLDivElement>) => {
         if ('orientation' in screen && 'unlock' in screen.orientation) {
           try {
             await screen.orientation.unlock();
-            await (screen.orientation as any).lock('landscape');
+            await screen.orientation.lock('landscape');
           } catch (error) {
             console.log('Orientation lock not supported');
           }

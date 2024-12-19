@@ -115,8 +115,11 @@ export const VideoPlayer = ({
     videoRef,
     togglePlay,
     toggleFullscreen,
-    toggleMute,
-    skip
+    skip: (seconds: number) => {
+      const video = videoRef.current;
+      if (!video) return;
+      video.currentTime = Math.max(0, Math.min(video.currentTime + seconds, video.duration));
+    }
   });
 
   return (
