@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { VideoPlayer } from "./video/VideoPlayer";
 import { VideoReactions } from "./video/VideoReactions";
+import { CommentSection } from "./comments/CommentSection";
 
 interface VideoCardProps {
   id: string;
@@ -80,10 +81,11 @@ export const VideoCard = ({
             </span>
           ))}
         </div>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-4">
           <p className="text-youtube-gray text-sm">{views} views</p>
           <VideoReactions videoId={id} initialLikes={likes} initialDislikes={dislikes} />
         </div>
+        <CommentSection videoId={id} />
       </div>
     </div>
   );
