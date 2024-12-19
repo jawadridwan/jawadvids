@@ -3,6 +3,7 @@ import { VideoActions } from "./video/VideoActions";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Video } from "@/types/video";
+import { useSession } from "@supabase/auth-helpers-react";
 
 interface VideoListProps {
   videos: Video[];
@@ -10,13 +11,16 @@ interface VideoListProps {
 }
 
 export const VideoList = ({ videos: initialVideos, setVideos }: VideoListProps) => {
-  const { data: videos = initialVideos } = useQuery<Video[]>({
-    queryKey: ['videos'],
+  const session = useSession();
+
+  const { data: videos = initialVideos } = useQuery({
+    queryKey: ['videos', session?.user?.id],
     queryFn: async () => {
-      console.log('Fetching videos from Supabase');
+      console.log('Fetching videos from Supabase for user:', session?.user?.id);
       const { data: videosData, error: videosError } = await supabase
         .from('videos')
-        .select('*, reactions(type)');
+        .select('*, reactions(type)')
+        .eq('user_id', session?.user?.id);
 
       if (videosError) {
         console.error('Error fetching videos:', videosError);
@@ -42,7 +46,16 @@ export const VideoList = ({ videos: initialVideos, setVideos }: VideoListProps) 
       }));
     },
     initialData: initialVideos,
+    enabled: !!session?.user?.id,
   });
+
+  if (!session) {
+    return (
+      <div className="text-center text-gray-500 py-12">
+        Please sign in to view your videos.
+      </div>
+    );
+  }
 
   if (!videos || videos.length === 0) {
     return (
