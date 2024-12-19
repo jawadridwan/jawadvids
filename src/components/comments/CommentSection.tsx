@@ -24,13 +24,19 @@ export const CommentSection = ({ videoId }: CommentSectionProps) => {
         .from('comments')
         .select(`
           *,
-          profiles (username, avatar_url)
+          profiles:user_id (
+            username,
+            avatar_url
+          )
         `)
         .eq('video_id', videoId)
         .is('deleted_at', null)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching comments:', error);
+        throw error;
+      }
       return data;
     },
   });

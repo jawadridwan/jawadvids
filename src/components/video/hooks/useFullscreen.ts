@@ -23,9 +23,9 @@ export const useFullscreen = (elementRef: RefObject<HTMLElement>) => {
       if (!document.fullscreenElement) {
         await element.requestFullscreen();
         // Only try to lock orientation if the API is available
-        if (screen.orientation && typeof screen.orientation.lock === 'function') {
+        if (screen.orientation && 'lock' in screen.orientation) {
           try {
-            await screen.orientation.lock('landscape');
+            await (screen.orientation as any).lock('landscape');
           } catch (error) {
             console.warn('Failed to lock screen orientation:', error);
           }
@@ -33,9 +33,9 @@ export const useFullscreen = (elementRef: RefObject<HTMLElement>) => {
       } else {
         await document.exitFullscreen();
         // Only try to unlock orientation if the API is available
-        if (screen.orientation && typeof screen.orientation.unlock === 'function') {
+        if (screen.orientation && 'unlock' in screen.orientation) {
           try {
-            await screen.orientation.unlock();
+            await (screen.orientation as any).unlock();
           } catch (error) {
             console.warn('Failed to unlock screen orientation:', error);
           }

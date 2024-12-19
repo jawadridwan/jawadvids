@@ -15,7 +15,7 @@ interface Comment {
   profiles: {
     username: string | null;
     avatar_url: string | null;
-  } | null;
+  };
 }
 
 interface CommentListProps {
