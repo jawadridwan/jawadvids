@@ -43,7 +43,7 @@ export const VideoList = ({ videos: initialVideos, setVideos }: VideoListProps) 
         url: video.url,
         likes: video.reactions?.filter((r: any) => r.type === 'like').length || 0,
         dislikes: video.reactions?.filter((r: any) => r.type === 'dislike').length || 0
-      })) as Video[];
+      }));
     },
     initialData: initialVideos,
     enabled: !!session?.user?.id,
