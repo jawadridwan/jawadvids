@@ -5,12 +5,13 @@ import { Slider } from '@/components/ui/slider';
 
 interface VideoVolumeProps {
   volume: number;
-  isMuted: boolean;
   onVolumeChange: (value: number[]) => void;
   onToggleMute: () => void;
 }
 
-export const VideoVolume = ({ volume, isMuted, onVolumeChange, onToggleMute }: VideoVolumeProps) => {
+export const VideoVolume = ({ volume, onVolumeChange, onToggleMute }: VideoVolumeProps) => {
+  const isMuted = volume === 0;
+  
   return (
     <div className="flex items-center gap-2">
       <Button
@@ -23,7 +24,7 @@ export const VideoVolume = ({ volume, isMuted, onVolumeChange, onToggleMute }: V
       </Button>
       <div className="w-24">
         <Slider
-          value={[isMuted ? 0 : volume]}
+          value={[volume]}
           onValueChange={onVolumeChange}
           max={1}
           step={0.1}

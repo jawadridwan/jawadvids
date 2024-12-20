@@ -47,14 +47,19 @@ export const VideoCard = ({
         .from('performance_metrics')
         .select('*')
         .eq('video_id', id)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching engagement metrics:', error);
         return null;
       }
 
-      return metrics;
+      return metrics || {
+        views_count: 0,
+        likes_count: 0,
+        comments_count: 0,
+        shares_count: 0
+      };
     },
     enabled: !!id
   });
@@ -68,7 +73,6 @@ export const VideoCard = ({
       await navigator.clipboard.writeText(window.location.origin + '/video/' + id);
       toast.success('Video link copied to clipboard!');
       
-      // Record share engagement
       await supabase.from('engagement').insert({
         video_id: id,
         type: 'share',
