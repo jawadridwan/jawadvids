@@ -26,6 +26,7 @@ interface VideoControlsProps {
   onViewModeChange?: (mode: 'default' | 'medium' | 'fullscreen') => void;
   onPreferenceChange?: (key: string, value: any) => void;
   videoRef: React.RefObject<HTMLVideoElement>;
+  viewMode: 'default' | 'medium' | 'fullscreen';
 }
 
 export const VideoControls = ({
@@ -47,7 +48,8 @@ export const VideoControls = ({
   onToggleCaptions,
   onViewModeChange,
   onPreferenceChange,
-  videoRef
+  videoRef,
+  viewMode
 }: VideoControlsProps) => {
   return (
     <div
@@ -70,6 +72,7 @@ export const VideoControls = ({
 
           <VideoVolume
             volume={preferences.volume}
+            isMuted={preferences.volume === 0}
             onVolumeChange={(value) => onPreferenceChange?.('volume', value[0])}
             onToggleMute={() => onPreferenceChange?.('volume', preferences.volume === 0 ? 1 : 0)}
           />
