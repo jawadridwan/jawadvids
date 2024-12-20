@@ -152,6 +152,7 @@ export const EnhancedVideoPlayer = ({
             onViewModeChange={handleViewModeChange}
             onPreferenceChange={updatePreference}
             videoRef={videoRef}
+            viewMode={viewMode}
           />
         </>
       )}
