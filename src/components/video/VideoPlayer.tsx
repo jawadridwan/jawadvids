@@ -4,6 +4,7 @@ import { VideoProgress } from './controls/VideoProgress';
 import { VideoControls } from './controls/VideoControls';
 import { useFullscreen } from './hooks/useFullscreen';
 import { useKeyboardControls } from './hooks/useKeyboardControls';
+import { useVideoPreferences } from './hooks/useVideoPreferences';
 
 interface VideoPlayerProps {
   url: string;
@@ -26,15 +27,9 @@ export const VideoPlayer = ({
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [showControls, setShowControls] = useState(true);
-  const [preferences, setPreferences] = useState({
-    volume: 1,
-    playbackSpeed: 1,
-    quality: 'auto',
-    autoScroll: true,
-    scrollThreshold: 0.8,
-    scrollSpeed: 1000,
-  });
-
+  const [viewMode, setViewMode] = useState<'default' | 'medium' | 'fullscreen'>('default');
+  
+  const { preferences, updatePreference } = useVideoPreferences();
   const { isFullscreen, toggleFullscreen } = useFullscreen(containerRef);
 
   useEffect(() => {
@@ -74,22 +69,10 @@ export const VideoPlayer = ({
     }
   };
 
-  const handlePreferenceChange = (key: string, value: any) => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    setPreferences(prev => ({ ...prev, [key]: value }));
-
-    switch (key) {
-      case 'volume':
-        video.volume = value;
-        video.muted = value === 0;
-        break;
-      case 'playbackSpeed':
-        video.playbackRate = value;
-        break;
-      default:
-        break;
+  const handleViewModeChange = (mode: 'default' | 'medium' | 'fullscreen') => {
+    setViewMode(mode);
+    if (mode === 'fullscreen') {
+      toggleFullscreen();
     }
   };
 
@@ -113,17 +96,21 @@ export const VideoPlayer = ({
     }
   });
 
+  const containerClasses = cn(
+    "relative group bg-black rounded-lg overflow-hidden",
+    viewMode === 'medium' && "w-[854px] h-[480px]",
+    viewMode === 'default' && "w-full aspect-video",
+    className
+  );
+
   return (
     <div 
       ref={containerRef}
-      className={cn(
-        "relative group bg-black rounded-lg overflow-hidden",
-        className
-      )}
+      className={containerClasses}
       onMouseEnter={() => setShowControls(true)}
-      onMouseLeave={() => setShowControls(false)}
+      onMouseLeave={() => !isPlaying && setShowControls(false)}
       onTouchStart={() => setShowControls(true)}
-      onTouchEnd={() => setTimeout(() => setShowControls(false), 3000)}
+      onTouchEnd={() => setTimeout(() => !isPlaying && setShowControls(false), 3000)}
     >
       <video
         ref={videoRef}
@@ -136,30 +123,24 @@ export const VideoPlayer = ({
         Your browser does not support the video tag.
       </video>
 
-      <div 
-        className={cn(
-          "absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-4",
-          showControls ? "opacity-100" : "opacity-0",
-          "transition-opacity duration-300"
-        )}
-      >
-        <VideoProgress
-          currentTime={currentTime}
-          duration={duration}
-          onSeek={handleSeek}
-        />
+      <VideoProgress
+        currentTime={currentTime}
+        duration={duration}
+        onSeek={handleSeek}
+      />
 
-        <VideoControls
-          isPlaying={isPlaying}
-          isFullscreen={isFullscreen}
-          preferences={preferences}
-          showControls={showControls}
-          onPlayPause={togglePlay}
-          onToggleFullscreen={toggleFullscreen}
-          onPreferenceChange={handlePreferenceChange}
-          videoRef={videoRef}
-        />
-      </div>
+      <VideoControls
+        isPlaying={isPlaying}
+        isFullscreen={isFullscreen}
+        preferences={preferences}
+        showControls={showControls}
+        onPlayPause={togglePlay}
+        onToggleFullscreen={toggleFullscreen}
+        onViewModeChange={handleViewModeChange}
+        onPreferenceChange={updatePreference}
+        videoRef={videoRef}
+        viewMode={viewMode}
+      />
     </div>
   );
 };
