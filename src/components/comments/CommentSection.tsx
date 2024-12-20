@@ -24,9 +24,9 @@ export const CommentSection = ({ videoId }: CommentSectionProps) => {
         .from('comments')
         .select(`
           *,
-          profiles:user_id (
-            username,
-            avatar_url
+          user:user_id (
+            username:profiles(username),
+            avatar_url:profiles(avatar_url)
           )
         `)
         .eq('video_id', videoId)
@@ -37,7 +37,15 @@ export const CommentSection = ({ videoId }: CommentSectionProps) => {
         console.error('Error fetching comments:', error);
         throw error;
       }
-      return data;
+
+      // Transform the data to match the Comment interface
+      return data.map((comment: any) => ({
+        ...comment,
+        profiles: {
+          username: comment.user?.username?.username || 'Anonymous',
+          avatar_url: comment.user?.avatar_url?.avatar_url || null
+        }
+      }));
     },
   });
 

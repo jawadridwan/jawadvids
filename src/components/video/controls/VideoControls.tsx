@@ -5,26 +5,20 @@ import { VideoVolume } from './VideoVolume';
 import { VideoPlaybackSpeed } from './VideoPlaybackSpeed';
 import { VideoQualitySelector } from './VideoQualitySelector';
 import { cn } from '@/lib/utils';
+import { VideoPreferences } from '../hooks/useVideoPreferences';
 
-interface VideoControlsProps {
+export interface VideoControlsProps {
   isPlaying: boolean;
   isFullscreen: boolean;
   isPiPActive?: boolean;
-  preferences?: {
-    volume: number;
-    playbackSpeed: number;
-    quality: string;
-    autoScroll: boolean;
-    scrollThreshold: number;
-    scrollSpeed: number;
-  };
+  preferences: VideoPreferences;
   showControls: boolean;
   onPlayPause: () => void;
   onToggleFullscreen: () => void;
   onTogglePiP?: () => void;
   onToggleCaptions?: () => void;
-  onViewModeChange?: (mode: 'default' | 'medium' | 'fullscreen') => void;
-  onPreferenceChange?: (key: string, value: any) => void;
+  onViewModeChange: (mode: 'default' | 'medium' | 'fullscreen') => void;
+  onPreferenceChange: <K extends keyof VideoPreferences>(key: K, value: VideoPreferences[K]) => void;
   videoRef: React.RefObject<HTMLVideoElement>;
   viewMode: 'default' | 'medium' | 'fullscreen';
 }
@@ -33,14 +27,7 @@ export const VideoControls = ({
   isPlaying,
   isFullscreen,
   isPiPActive,
-  preferences = {
-    volume: 1,
-    playbackSpeed: 1,
-    quality: 'auto',
-    autoScroll: true,
-    scrollThreshold: 0.8,
-    scrollSpeed: 1000,
-  },
+  preferences,
   showControls,
   onPlayPause,
   onToggleFullscreen,
@@ -73,18 +60,18 @@ export const VideoControls = ({
           <VideoVolume
             volume={preferences.volume}
             isMuted={preferences.volume === 0}
-            onVolumeChange={(value) => onPreferenceChange?.('volume', value[0])}
-            onToggleMute={() => onPreferenceChange?.('volume', preferences.volume === 0 ? 1 : 0)}
+            onVolumeChange={(value) => onPreferenceChange('volume', value[0])}
+            onToggleMute={() => onPreferenceChange('volume', preferences.volume === 0 ? 1 : 0)}
           />
 
           <VideoPlaybackSpeed
             speed={preferences.playbackSpeed}
-            onSpeedChange={(value) => onPreferenceChange?.('playbackSpeed', value)}
+            onSpeedChange={(value) => onPreferenceChange('playbackSpeed', value)}
           />
 
           <VideoQualitySelector
             quality={preferences.quality}
-            onQualityChange={(value) => onPreferenceChange?.('quality', value)}
+            onQualityChange={(value) => onPreferenceChange('quality', value)}
           />
         </div>
 

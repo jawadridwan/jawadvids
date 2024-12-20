@@ -17,7 +17,16 @@ const Content = () => {
       
       const { data, error } = await supabase
         .from('videos')
-        .select('*, reactions(type)')
+        .select(`
+          *,
+          reactions(type),
+          performance_metrics(
+            views_count,
+            likes_count,
+            comments_count,
+            shares_count
+          )
+        `)
         .eq('user_id', session.user.id);
 
       if (error) throw error;
@@ -26,7 +35,7 @@ const Content = () => {
         id: video.id,
         title: video.title,
         description: video.description,
-        views: '0',
+        views: video.performance_metrics?.[0]?.views_count?.toString() || '0',
         status: video.status || 'ready' as const,
         uploadDate: video.created_at,
         thumbnail: video.thumbnail_url || '/placeholder.svg',
@@ -37,7 +46,13 @@ const Content = () => {
         thumbnail_url: video.thumbnail_url,
         url: video.url,
         likes: video.reactions?.filter((r: any) => r.type === 'like').length || 0,
-        dislikes: video.reactions?.filter((r: any) => r.type === 'dislike').length || 0
+        dislikes: video.reactions?.filter((r: any) => r.type === 'dislike').length || 0,
+        engagement: {
+          views: video.performance_metrics?.[0]?.views_count || 0,
+          likes: video.performance_metrics?.[0]?.likes_count || 0,
+          comments: video.performance_metrics?.[0]?.comments_count || 0,
+          shares: video.performance_metrics?.[0]?.shares_count || 0
+        }
       }));
     },
     enabled: !!session?.user?.id
