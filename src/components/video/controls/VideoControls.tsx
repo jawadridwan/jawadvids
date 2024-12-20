@@ -1,11 +1,17 @@
 import React from 'react';
-import { Play, Pause, Maximize, Minimize, PictureInPicture, Subtitles } from 'lucide-react';
+import { Play, Pause, Maximize, Minimize, Settings, PictureInPicture, Subtitles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { VideoVolume } from './VideoVolume';
 import { VideoPlaybackSpeed } from './VideoPlaybackSpeed';
 import { VideoQualitySelector } from './VideoQualitySelector';
 import { cn } from '@/lib/utils';
 import { VideoPreferences } from '../hooks/useVideoPreferences';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export interface VideoControlsProps {
   isPlaying: boolean;
@@ -76,6 +82,34 @@ export const VideoControls = ({
         </div>
 
         <div className="flex items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="text-white hover:bg-white/10">
+                <Settings className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="bg-black/90 border-white/10">
+              <DropdownMenuItem 
+                className="text-white hover:bg-white/10 cursor-pointer"
+                onClick={() => onViewModeChange('default')}
+              >
+                Default Size
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                className="text-white hover:bg-white/10 cursor-pointer"
+                onClick={() => onViewModeChange('medium')}
+              >
+                Theater Mode
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                className="text-white hover:bg-white/10 cursor-pointer"
+                onClick={() => onViewModeChange('fullscreen')}
+              >
+                Fullscreen
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           {onToggleCaptions && (
             <Button
               variant="ghost"

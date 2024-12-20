@@ -5,12 +5,13 @@ import { Video } from "@/types/video";
 import { useSession } from "@supabase/auth-helpers-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const Content = () => {
   const [videos, setVideos] = useState<Video[]>([]);
   const session = useSession();
 
-  const { data: userVideos } = useQuery({
+  const { data: userVideos, isError } = useQuery({
     queryKey: ['user-videos'],
     queryFn: async () => {
       if (!session?.user?.id) return [];
@@ -29,7 +30,10 @@ const Content = () => {
         `)
         .eq('user_id', session.user.id);
 
-      if (error) throw error;
+      if (error) {
+        toast.error('Failed to fetch videos');
+        throw error;
+      }
       
       return data.map((video: any) => ({
         id: video.id,
@@ -58,13 +62,25 @@ const Content = () => {
     enabled: !!session?.user?.id
   });
 
+  if (!session) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-youtube-darker">
+        <p className="text-white text-xl">Please sign in to view your content</p>
+      </div>
+    );
+  }
+
   return (
     <div className="flex bg-youtube-darker min-h-screen">
       <Sidebar />
       <main className="flex-1 p-8">
         <div className="max-w-7xl mx-auto">
           <h1 className="text-2xl font-bold text-white mb-8">Your Content</h1>
-          <VideoList videos={userVideos || videos} setVideos={setVideos} />
+          {isError ? (
+            <p className="text-red-500">Failed to load videos. Please try again later.</p>
+          ) : (
+            <VideoList videos={userVideos || videos} setVideos={setVideos} />
+          )}
         </div>
       </main>
     </div>
