@@ -67,6 +67,7 @@ export const VideoList = ({ videos: initialVideos, setVideos }: VideoListProps) 
             url={video.url}
             likes={video.likes}
             dislikes={video.dislikes}
+            user_id={video.user_id}
           />
           <VideoActions video={video} />
         </div>
