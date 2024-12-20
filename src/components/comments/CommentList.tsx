@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface Comment {
   id: string;
@@ -15,7 +16,7 @@ interface Comment {
   profiles: {
     username: string | null;
     avatar_url: string | null;
-  };
+  } | null;
 }
 
 interface CommentListProps {
@@ -85,9 +86,12 @@ export const CommentList = ({ comments, onCommentUpdate }: CommentListProps) => 
         <div key={comment.id} className="bg-youtube-dark p-4 rounded-lg">
           <div className="flex justify-between items-start mb-2">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-youtube-red flex items-center justify-center text-white">
-                {comment.profiles?.username?.[0]?.toUpperCase() || 'U'}
-              </div>
+              <Avatar>
+                <AvatarImage src={comment.profiles?.avatar_url || undefined} />
+                <AvatarFallback>
+                  {comment.profiles?.username?.[0]?.toUpperCase() || 'U'}
+                </AvatarFallback>
+              </Avatar>
               <div>
                 <p className="font-medium">{comment.profiles?.username || 'Anonymous'}</p>
                 <p className="text-sm text-youtube-gray">
