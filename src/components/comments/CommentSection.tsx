@@ -24,7 +24,7 @@ export const CommentSection = ({ videoId }: CommentSectionProps) => {
         .from('comments')
         .select(`
           *,
-          profiles:user_id (
+          profiles (
             username,
             avatar_url
           )

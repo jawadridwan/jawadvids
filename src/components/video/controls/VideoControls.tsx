@@ -70,7 +70,6 @@ export const VideoControls = ({
 
           <VideoVolume
             volume={preferences.volume}
-            isMuted={preferences.volume === 0}
             onVolumeChange={(value) => onPreferenceChange?.('volume', value[0])}
             onToggleMute={() => onPreferenceChange?.('volume', preferences.volume === 0 ? 1 : 0)}
           />

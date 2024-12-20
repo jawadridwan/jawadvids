@@ -23,12 +23,17 @@ export const VideoPlayer = ({
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [volume, setVolume] = useState(1);
-  const [isMuted, setIsMuted] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [showControls, setShowControls] = useState(true);
-  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const [preferences, setPreferences] = useState({
+    volume: 1,
+    playbackSpeed: 1,
+    quality: 'auto',
+    autoScroll: true,
+    scrollThreshold: 0.8,
+    scrollSpeed: 1000,
+  });
 
   const { isFullscreen, toggleFullscreen } = useFullscreen(containerRef);
 
@@ -69,29 +74,23 @@ export const VideoPlayer = ({
     }
   };
 
-  const toggleMute = () => {
+  const handlePreferenceChange = (key: string, value: any) => {
     const video = videoRef.current;
     if (!video) return;
 
-    video.muted = !video.muted;
-    setIsMuted(video.muted);
-  };
+    setPreferences(prev => ({ ...prev, [key]: value }));
 
-  const handleVolumeChange = (value: number[]) => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    const newVolume = value[0];
-    video.volume = newVolume;
-    setVolume(newVolume);
-    setIsMuted(newVolume === 0);
-  };
-
-  const skip = (seconds: number) => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    video.currentTime = Math.max(0, Math.min(video.currentTime + seconds, video.duration));
+    switch (key) {
+      case 'volume':
+        video.volume = value;
+        video.muted = value === 0;
+        break;
+      case 'playbackSpeed':
+        video.playbackRate = value;
+        break;
+      default:
+        break;
+    }
   };
 
   const handleSeek = (value: number[]) => {
@@ -101,14 +100,6 @@ export const VideoPlayer = ({
     const newTime = (value[0] / 100) * duration;
     video.currentTime = newTime;
     setCurrentTime(newTime);
-  };
-
-  const handleSpeedChange = (speed: number) => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    video.playbackRate = speed;
-    setPlaybackSpeed(speed);
   };
 
   useKeyboardControls({
@@ -161,16 +152,12 @@ export const VideoPlayer = ({
         <VideoControls
           isPlaying={isPlaying}
           isFullscreen={isFullscreen}
-          volume={volume}
-          isMuted={isMuted}
-          playbackSpeed={playbackSpeed}
-          currentTime={currentTime}
-          duration={duration}
+          preferences={preferences}
+          showControls={showControls}
           onPlayPause={togglePlay}
           onToggleFullscreen={toggleFullscreen}
-          onVolumeChange={handleVolumeChange}
-          onToggleMute={toggleMute}
-          onSpeedChange={handleSpeedChange}
+          onPreferenceChange={handlePreferenceChange}
+          videoRef={videoRef}
         />
       </div>
     </div>
