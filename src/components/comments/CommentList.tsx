@@ -1,12 +1,9 @@
 import { useState } from "react";
 import { useSession } from "@supabase/auth-helpers-react";
-import { Pencil, Trash2, Save, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { formatDistanceToNow } from "date-fns";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { CommentActions } from "./CommentActions";
+import { CommentContent } from "./CommentContent";
 
 interface Comment {
   id: string;
@@ -84,70 +81,25 @@ export const CommentList = ({ comments, onCommentUpdate }: CommentListProps) => 
     <div className="space-y-4">
       {comments.map((comment) => (
         <div key={comment.id} className="bg-youtube-dark p-4 rounded-lg">
-          <div className="flex justify-between items-start mb-2">
-            <div className="flex items-center gap-2">
-              <Avatar>
-                <AvatarImage src={comment.profiles?.avatar_url || undefined} />
-                <AvatarFallback>
-                  {comment.profiles?.username?.[0]?.toUpperCase() || 'U'}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="font-medium">{comment.profiles?.username || 'Anonymous'}</p>
-                <p className="text-sm text-youtube-gray">
-                  {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
-                </p>
-              </div>
-            </div>
-            {session?.user?.id === comment.user_id && (
-              <div className="flex gap-2">
-                {editingId === comment.id ? (
-                  <>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleSaveEdit(comment.id)}
-                    >
-                      <Save className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleCancelEdit}
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleEdit(comment)}
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDelete(comment.id)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-          {editingId === comment.id ? (
-            <Textarea
-              value={editContent}
-              onChange={(e) => setEditContent(e.target.value)}
-              className="w-full mt-2"
+          <div className="flex justify-between items-start">
+            <CommentContent
+              username={comment.profiles?.username}
+              avatarUrl={comment.profiles?.avatar_url}
+              createdAt={comment.created_at}
+              content={comment.content}
+              isEditing={editingId === comment.id}
+              editContent={editContent}
+              onEditContentChange={setEditContent}
             />
-          ) : (
-            <p className="text-youtube-gray">{comment.content}</p>
-          )}
+            <CommentActions
+              isEditing={editingId === comment.id}
+              isOwnComment={session?.user?.id === comment.user_id}
+              onEdit={() => handleEdit(comment)}
+              onSave={() => handleSaveEdit(comment.id)}
+              onCancel={handleCancelEdit}
+              onDelete={() => handleDelete(comment.id)}
+            />
+          </div>
         </div>
       ))}
     </div>
