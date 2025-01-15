@@ -35,7 +35,7 @@ export const CommentForm = ({ videoId, onCommentAdded }: CommentFormProps) => {
         .insert({
           content: comment.trim(),
           video_id: videoId,
-          user_id: session.user.id,
+          user_id: session.user.id
         });
 
       if (error) throw error;
