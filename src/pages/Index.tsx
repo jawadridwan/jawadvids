@@ -1,11 +1,12 @@
+import { Sidebar } from "@/components/Sidebar";
+import { VideoList } from "@/components/VideoList";
+import { VideoUploadDialog } from "@/components/upload/VideoUploadDialog";
 import { useState, useEffect } from "react";
 import { AuthComponent } from "@/components/auth/Auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
 import { toast } from "sonner";
 import { Video } from "@/types/video";
-import { TikTokFeed } from "@/components/video/TikTokFeed";
-import { VideoUploadDialog } from "@/components/upload/VideoUploadDialog";
 
 const Index = () => {
   const [videos, setVideos] = useState<Video[]>([]);
@@ -13,11 +14,13 @@ const Index = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);
     });
 
+    // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -27,43 +30,12 @@ const Index = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  useEffect(() => {
-    const fetchVideos = async () => {
-      const { data, error } = await supabase
-        .from('videos')
-        .select('*')
-        .order('created_at', { ascending: false });
+  const handleUploadComplete = (videoData: Video) => {
+    setVideos(prev => [...prev, videoData]);
+    toast.success("Video uploaded successfully!");
+  };
 
-      if (error) {
-        toast.error('Failed to fetch videos');
-        return;
-      }
-
-      // Transform the data to match the Video interface
-      const transformedVideos: Video[] = (data || []).map(video => ({
-        id: video.id,
-        title: video.title,
-        description: video.description || '',
-        hashtags: [], // Default empty array since it's not in the database
-        views: '0', // Default value
-        thumbnail: video.thumbnail_url || '',
-        url: video.url,
-        thumbnail_url: video.thumbnail_url,
-        uploadDate: video.created_at,
-        status: 'ready' as const, // Default to ready since we're displaying existing videos
-        created_at: video.created_at,
-        updated_at: video.updated_at,
-        user_id: video.user_id,
-        likes: 0,
-        dislikes: 0
-      }));
-
-      setVideos(transformedVideos);
-    };
-
-    fetchVideos();
-  }, []);
-
+  // Show loading state
   if (loading) {
     return (
       <div className="min-h-screen bg-youtube-darker flex items-center justify-center">
@@ -72,22 +44,25 @@ const Index = () => {
     );
   }
 
+  // Show auth component if not authenticated
   if (!session) {
     return <AuthComponent />;
   }
 
   return (
-    <div className="relative min-h-screen bg-youtube-darker">
-      <TikTokFeed videos={videos} />
-      
-      <div className="fixed top-4 right-4 z-50">
-        <VideoUploadDialog
-          onUploadComplete={(videoData) => {
-            setVideos(prev => [videoData, ...prev]);
-            toast.success("Video uploaded successfully!");
-          }}
-        />
-      </div>
+    <div className="flex bg-youtube-darker min-h-screen touch-pan-y">
+      <Sidebar />
+      <main className="flex-1 p-8 overflow-auto">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="text-2xl font-bold text-white">Dashboard</h1>
+            <VideoUploadDialog onUploadComplete={handleUploadComplete} />
+          </div>
+
+          <h2 className="text-xl font-bold text-white mb-4">Your Videos</h2>
+          <VideoList videos={videos} setVideos={setVideos} />
+        </div>
+      </main>
     </div>
   );
 };

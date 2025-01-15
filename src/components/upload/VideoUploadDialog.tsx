@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { UploadForm } from "./UploadForm";
+import { toast } from "sonner";
 import { Upload } from "lucide-react";
 
 interface VideoUploadDialogProps {
