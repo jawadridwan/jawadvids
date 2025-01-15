@@ -6,6 +6,8 @@ import { CommentSection } from "./comments/CommentSection";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { VideoCardActions } from "./video/VideoCardActions";
+import { Button } from "./ui/button";
+import { Maximize2, Minimize2 } from "lucide-react";
 
 interface VideoCardProps {
   id: string;
@@ -37,6 +39,7 @@ export const VideoCard = ({
   user_id
 }: VideoCardProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [videoSize, setVideoSize] = useState<'default' | 'medium' | 'fullscreen'>('default');
 
   const { data: engagementMetrics } = useQuery({
     queryKey: ['engagement-metrics', id],
@@ -66,20 +69,43 @@ export const VideoCard = ({
     console.log('Video progress:', Math.round((currentTime / duration) * 100), '%');
   };
 
+  const toggleVideoSize = () => {
+    setVideoSize(prev => {
+      if (prev === 'default') return 'medium';
+      if (prev === 'medium') return 'fullscreen';
+      return 'default';
+    });
+  };
+
   return (
     <div className={cn(
-      "bg-youtube-dark rounded-xl overflow-hidden animate-fade-in hover:scale-105 transition-transform",
+      "bg-youtube-dark rounded-xl overflow-hidden animate-fade-in transition-transform",
+      videoSize === 'default' && "hover:scale-105",
       className
     )}>
       <div className="relative">
         {url && status === 'ready' ? (
-          <VideoPlayer
-            url={url}
-            thumbnail={thumbnail}
-            onTimeUpdate={handleTimeUpdate}
-            className="w-full aspect-video"
-            onPlayStateChange={setIsPlaying}
-          />
+          <div className="relative">
+            <VideoPlayer
+              url={url}
+              thumbnail={thumbnail}
+              onTimeUpdate={handleTimeUpdate}
+              onPlayStateChange={setIsPlaying}
+              size={videoSize}
+            />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-2 right-2 text-white bg-black/50 hover:bg-black/70"
+              onClick={toggleVideoSize}
+            >
+              {videoSize === 'fullscreen' ? (
+                <Minimize2 className="w-4 h-4" />
+              ) : (
+                <Maximize2 className="w-4 h-4" />
+              )}
+            </Button>
+          </div>
         ) : (
           <img 
             src={thumbnail || "/placeholder.svg"} 

@@ -5,6 +5,8 @@ import { VideoControls } from './controls/VideoControls';
 import { useFullscreen } from './hooks/useFullscreen';
 import { useKeyboardControls } from './hooks/useKeyboardControls';
 import { useVideoPreferences } from './hooks/useVideoPreferences';
+import { useAutoScroll } from './hooks/useAutoScroll';
+import { toast } from 'sonner';
 
 interface VideoPlayerProps {
   url: string;
@@ -12,6 +14,8 @@ interface VideoPlayerProps {
   onTimeUpdate?: (currentTime: number, duration: number) => void;
   className?: string;
   onPlayStateChange?: (isPlaying: boolean) => void;
+  nextVideoId?: string;
+  size?: 'default' | 'medium' | 'fullscreen';
 }
 
 export const VideoPlayer = ({ 
@@ -19,7 +23,9 @@ export const VideoPlayer = ({
   thumbnail, 
   onTimeUpdate, 
   className,
-  onPlayStateChange 
+  onPlayStateChange,
+  nextVideoId,
+  size = 'default'
 }: VideoPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -27,10 +33,18 @@ export const VideoPlayer = ({
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [showControls, setShowControls] = useState(true);
-  const [viewMode, setViewMode] = useState<'default' | 'medium' | 'fullscreen'>('default');
+  const [error, setError] = useState<string | null>(null);
   
   const { preferences, updatePreference } = useVideoPreferences();
   const { isFullscreen, toggleFullscreen } = useFullscreen(containerRef);
+
+  useAutoScroll({
+    videoRef,
+    nextVideoId,
+    isEnabled: preferences.autoScroll,
+    scrollThreshold: preferences.scrollThreshold,
+    scrollSpeed: preferences.scrollSpeed
+  });
 
   useEffect(() => {
     const video = videoRef.current;
@@ -45,12 +59,19 @@ export const VideoPlayer = ({
       setDuration(video.duration);
     };
 
+    const handleError = () => {
+      setError('Failed to load video');
+      toast.error('Failed to load video');
+    };
+
     video.addEventListener('timeupdate', handleTimeUpdate);
     video.addEventListener('loadedmetadata', handleLoadedMetadata);
+    video.addEventListener('error', handleError);
 
     return () => {
       video.removeEventListener('timeupdate', handleTimeUpdate);
       video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      video.removeEventListener('error', handleError);
     };
   }, [onTimeUpdate]);
 
@@ -59,20 +80,16 @@ export const VideoPlayer = ({
     if (!video) return;
 
     if (video.paused) {
-      video.play();
+      video.play().catch(() => {
+        setError('Failed to play video');
+        toast.error('Failed to play video');
+      });
       setIsPlaying(true);
       onPlayStateChange?.(true);
     } else {
       video.pause();
       setIsPlaying(false);
       onPlayStateChange?.(false);
-    }
-  };
-
-  const handleViewModeChange = (mode: 'default' | 'medium' | 'fullscreen') => {
-    setViewMode(mode);
-    if (mode === 'fullscreen') {
-      toggleFullscreen();
     }
   };
 
@@ -97,9 +114,12 @@ export const VideoPlayer = ({
   });
 
   const containerClasses = cn(
-    "relative group bg-black rounded-lg overflow-hidden",
-    viewMode === 'medium' && "w-[854px] h-[480px]",
-    viewMode === 'default' && "w-full aspect-video",
+    "relative group bg-black rounded-lg overflow-hidden transition-all duration-300",
+    {
+      'w-full aspect-video': size === 'default',
+      'w-[854px] h-[480px]': size === 'medium',
+      'fixed inset-0 z-50': size === 'fullscreen'
+    },
     className
   );
 
@@ -112,35 +132,47 @@ export const VideoPlayer = ({
       onTouchStart={() => setShowControls(true)}
       onTouchEnd={() => setTimeout(() => !isPlaying && setShowControls(false), 3000)}
     >
-      <video
-        ref={videoRef}
-        className="w-full h-full"
-        poster={thumbnail}
-        onClick={togglePlay}
-        playsInline
-      >
-        <source src={url} type="video/mp4" />
-        Your browser does not support the video tag.
-      </video>
+      {error ? (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-white">
+          {error}
+        </div>
+      ) : (
+        <>
+          <video
+            ref={videoRef}
+            className="w-full h-full object-contain"
+            poster={thumbnail}
+            onClick={togglePlay}
+            playsInline
+          >
+            <source src={url} type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
 
-      <VideoProgress
-        currentTime={currentTime}
-        duration={duration}
-        onSeek={handleSeek}
-      />
+          <VideoProgress
+            currentTime={currentTime}
+            duration={duration}
+            onSeek={handleSeek}
+          />
 
-      <VideoControls
-        isPlaying={isPlaying}
-        isFullscreen={isFullscreen}
-        preferences={preferences}
-        showControls={showControls}
-        onPlayPause={togglePlay}
-        onToggleFullscreen={toggleFullscreen}
-        onViewModeChange={handleViewModeChange}
-        onPreferenceChange={updatePreference}
-        videoRef={videoRef}
-        viewMode={viewMode}
-      />
+          <VideoControls
+            isPlaying={isPlaying}
+            isFullscreen={isFullscreen}
+            preferences={preferences}
+            showControls={showControls}
+            onPlayPause={togglePlay}
+            onToggleFullscreen={toggleFullscreen}
+            onViewModeChange={(mode) => {
+              if (mode === 'fullscreen') {
+                toggleFullscreen();
+              }
+            }}
+            onPreferenceChange={updatePreference}
+            videoRef={videoRef}
+            viewMode={size}
+          />
+        </>
+      )}
     </div>
   );
 };
