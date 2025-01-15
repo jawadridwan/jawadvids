@@ -29,30 +29,26 @@ export const CommentForm = ({ videoId, onCommentAdded }: CommentFormProps) => {
     }
 
     setIsSubmitting(true);
-    try {
-      const { error } = await supabase
-        .from('comments')
-        .insert({
-          content: comment.trim(),
-          video_id: videoId,
-          user_id: session.user.id,
-        });
 
-      if (error) {
-        console.error('Error adding comment:', error);
-        toast.error("Failed to add comment");
-        return;
-      }
+    const { error } = await supabase
+      .from('comments')
+      .insert([{
+        content: comment.trim(),
+        video_id: videoId,
+        user_id: session.user.id
+      }]);
 
-      toast.success("Comment added successfully");
-      setComment("");
-      onCommentAdded();
-    } catch (error) {
+    if (error) {
       console.error('Error adding comment:', error);
       toast.error("Failed to add comment");
-    } finally {
       setIsSubmitting(false);
+      return;
     }
+
+    toast.success("Comment added successfully");
+    setComment("");
+    onCommentAdded();
+    setIsSubmitting(false);
   };
 
   return (
