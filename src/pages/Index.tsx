@@ -6,8 +6,6 @@ import { toast } from "sonner";
 import { Video } from "@/types/video";
 import { TikTokFeed } from "@/components/video/TikTokFeed";
 import { VideoUploadDialog } from "@/components/upload/VideoUploadDialog";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
 
 const Index = () => {
   const [videos, setVideos] = useState<Video[]>([]);
@@ -41,7 +39,26 @@ const Index = () => {
         return;
       }
 
-      setVideos(data || []);
+      // Transform the data to match the Video interface
+      const transformedVideos: Video[] = (data || []).map(video => ({
+        id: video.id,
+        title: video.title,
+        description: video.description || '',
+        hashtags: [], // Default empty array since it's not in the database
+        views: '0', // Default value
+        thumbnail: video.thumbnail_url || '',
+        url: video.url,
+        thumbnail_url: video.thumbnail_url,
+        uploadDate: video.created_at,
+        status: 'ready' as const, // Default to ready since we're displaying existing videos
+        created_at: video.created_at,
+        updated_at: video.updated_at,
+        user_id: video.user_id,
+        likes: 0,
+        dislikes: 0
+      }));
+
+      setVideos(transformedVideos);
     };
 
     fetchVideos();
@@ -69,11 +86,7 @@ const Index = () => {
             setVideos(prev => [videoData, ...prev]);
             toast.success("Video uploaded successfully!");
           }}
-        >
-          <Button size="icon" className="rounded-full bg-youtube-red hover:bg-youtube-red/90">
-            <Plus className="h-4 w-4" />
-          </Button>
-        </VideoUploadDialog>
+        />
       </div>
     </div>
   );
