@@ -38,10 +38,7 @@ export const CommentForm = ({ videoId, onCommentAdded }: CommentFormProps) => {
           user_id: session.user.id
         });
 
-      if (error) {
-        console.error('Supabase error:', error);
-        throw error;
-      }
+      if (error) throw error;
 
       toast.success("Comment added successfully");
       setComment("");
