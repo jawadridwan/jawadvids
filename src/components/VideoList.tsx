@@ -3,6 +3,7 @@ import { VideoActions } from "./video/VideoActions";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Video } from "@/types/video";
+import { AnalyticsChart } from "./AnalyticsChart";
 
 interface VideoListProps {
   videos: Video[];
@@ -53,25 +54,28 @@ export const VideoList = ({ videos: initialVideos, setVideos }: VideoListProps) 
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {videos.map((video) => (
-        <div key={video.id} className="relative group">
-          <VideoCard
-            id={video.id}
-            title={video.title}
-            views={video.views}
-            thumbnail={video.thumbnail}
-            description={video.description || ''}
-            hashtags={video.hashtags}
-            status={video.status}
-            url={video.url}
-            likes={video.likes}
-            dislikes={video.dislikes}
-            user_id={video.user_id}
-          />
-          <VideoActions video={video} />
-        </div>
-      ))}
+    <div className="space-y-8">
+      <AnalyticsChart />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {videos.map((video) => (
+          <div key={video.id} className="relative group">
+            <VideoCard
+              id={video.id}
+              title={video.title}
+              views={video.views}
+              thumbnail={video.thumbnail}
+              description={video.description || ''}
+              hashtags={video.hashtags}
+              status={video.status}
+              url={video.url}
+              likes={video.likes}
+              dislikes={video.dislikes}
+              user_id={video.user_id}
+            />
+            <VideoActions video={video} />
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

@@ -12,19 +12,26 @@ export const useClosedCaptions = (
 ) => {
   const [activeCaptions, setActiveCaptions] = useState(false);
 
+  const toggleCaptions = () => {
+    const video = videoRef.current;
+    if (!video || !video.textTracks) return;
+
+    const newState = !activeCaptions;
+    setActiveCaptions(newState);
+
+    Array.from(video.textTracks).forEach(track => {
+      track.mode = newState ? 'showing' : 'hidden';
+    });
+  };
+
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || !captions?.length) return;
+    if (!video || !video.textTracks) return;
 
-    const tracks = video.textTracks;
-    for (let i = 0; i < tracks.length; i++) {
-      tracks[i].mode = activeCaptions ? 'showing' : 'hidden';
-    }
-  }, [videoRef, captions, activeCaptions]);
-
-  const toggleCaptions = () => {
-    setActiveCaptions(prev => !prev);
-  };
+    Array.from(video.textTracks).forEach(track => {
+      track.mode = activeCaptions ? 'showing' : 'hidden';
+    });
+  }, [videoRef, activeCaptions]);
 
   return { activeCaptions, toggleCaptions };
 };

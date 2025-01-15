@@ -78,6 +78,7 @@ export type Database = {
           deleted_at: string | null
           id: string
           parent_id: string | null
+          reply_count: number | null
           updated_at: string
           user_id: string
           video_id: string | null
@@ -88,6 +89,7 @@ export type Database = {
           deleted_at?: string | null
           id?: string
           parent_id?: string | null
+          reply_count?: number | null
           updated_at?: string
           user_id: string
           video_id?: string | null
@@ -98,6 +100,7 @@ export type Database = {
           deleted_at?: string | null
           id?: string
           parent_id?: string | null
+          reply_count?: number | null
           updated_at?: string
           user_id?: string
           video_id?: string | null
@@ -404,7 +407,9 @@ export type Database = {
       }
       videos: {
         Row: {
+          available_qualities: Json | null
           created_at: string | null
+          default_quality: string | null
           description: string | null
           id: string
           thumbnail_url: string | null
@@ -414,7 +419,9 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          available_qualities?: Json | null
           created_at?: string | null
+          default_quality?: string | null
           description?: string | null
           id?: string
           thumbnail_url?: string | null
@@ -424,7 +431,9 @@ export type Database = {
           user_id: string
         }
         Update: {
+          available_qualities?: Json | null
           created_at?: string | null
+          default_quality?: string | null
           description?: string | null
           id?: string
           thumbnail_url?: string | null
@@ -463,6 +472,42 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "views_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      watch_later: {
+        Row: {
+          added_at: string
+          id: string
+          user_id: string
+          video_id: string
+        }
+        Insert: {
+          added_at?: string
+          id?: string
+          user_id: string
+          video_id: string
+        }
+        Update: {
+          added_at?: string
+          id?: string
+          user_id?: string
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "watch_later_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "watch_later_video_id_fkey"
             columns: ["video_id"]
             isOneToOne: false
             referencedRelation: "videos"
