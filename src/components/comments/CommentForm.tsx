@@ -38,14 +38,18 @@ export const CommentForm = ({ videoId, onCommentAdded }: CommentFormProps) => {
           user_id: session.user.id
         });
 
-      if (error) throw error;
+      if (error) {
+        toast.error("Failed to add comment");
+        console.error('Error adding comment:', error.message);
+        return;
+      }
 
       toast.success("Comment added successfully");
       setComment("");
       onCommentAdded();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error adding comment:', error);
-      toast.error(error.message || "Failed to add comment");
+      toast.error("Failed to add comment");
     } finally {
       setIsSubmitting(false);
     }
