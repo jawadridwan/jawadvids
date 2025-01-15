@@ -30,13 +30,15 @@ export const CommentForm = ({ videoId, onCommentAdded }: CommentFormProps) => {
 
     setIsSubmitting(true);
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('comments')
-        .insert([{
+        .insert({
           content: comment.trim(),
           video_id: videoId,
           user_id: session.user.id
-        }]);
+        })
+        .select('id')
+        .single();
 
       if (error) {
         console.error('Supabase error:', error);
