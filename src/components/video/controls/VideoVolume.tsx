@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import { Volume2, Volume1, Volume, VolumeX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -13,8 +13,8 @@ interface VideoVolumeProps {
 export const VideoVolume = ({ volume, onVolumeChange, onToggleMute }: VideoVolumeProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const [previousVolume, setPreviousVolume] = useState(1);
-  
-  const handleVolumeIconClick = useCallback(() => {
+
+  const handleVolumeIconClick = () => {
     if (volume > 0) {
       setPreviousVolume(volume);
       onVolumeChange([0]);
@@ -22,14 +22,14 @@ export const VideoVolume = ({ volume, onVolumeChange, onToggleMute }: VideoVolum
       onVolumeChange([previousVolume]);
     }
     onToggleMute();
-  }, [volume, previousVolume, onVolumeChange, onToggleMute]);
+  };
 
-  const VolumeIcon = useCallback(() => {
+  const VolumeIcon = () => {
     if (volume === 0) return <VolumeX className="w-4 h-4" />;
     if (volume < 0.3) return <Volume className="w-4 h-4" />;
     if (volume < 0.7) return <Volume1 className="w-4 h-4" />;
     return <Volume2 className="w-4 h-4" />;
-  }, [volume]);
+  };
 
   return (
     <div 
