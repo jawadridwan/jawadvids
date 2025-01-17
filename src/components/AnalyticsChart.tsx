@@ -20,6 +20,14 @@ export const AnalyticsChart = () => {
         return acc;
       }, {});
 
+      // If no data, provide some default values
+      if (Object.keys(groupedData).length === 0) {
+        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        days.forEach(day => {
+          groupedData[day] = 0;
+        });
+      }
+
       return Object.entries(groupedData).map(([date, views]) => ({
         date,
         views,
