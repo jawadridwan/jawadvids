@@ -42,18 +42,39 @@ const Engagement = () => {
     queryFn: async () => {
       if (!session?.user?.id) return null;
 
+      // First get the user's videos
+      const { data: videos } = await supabase
+        .from('videos')
+        .select('id')
+        .eq('user_id', session.user.id);
+
+      if (!videos?.length) return null;
+
+      const videoIds = videos.map(v => v.id);
+
+      // Then get performance metrics for those videos
       const { data, error } = await supabase
         .from('performance_metrics')
         .select('*')
-        .eq('user_id', session.user.id)
-        .maybeSingle();
+        .in('video_id', videoIds);
 
-      if (error && error.code !== 'PGRST116') {
+      if (error) {
         toast.error('Failed to fetch performance metrics');
         throw error;
       }
+
+      // Aggregate metrics across all videos
+      const aggregatedMetrics = data?.reduce((acc, curr) => ({
+        views_count: (acc.views_count || 0) + (curr.views_count || 0),
+        avg_watch_duration: Math.round(((acc.avg_watch_duration || 0) + (curr.avg_watch_duration || 0)) / (data.length || 1)),
+        avg_watch_percentage: Math.round(((acc.avg_watch_percentage || 0) + (curr.avg_watch_percentage || 0)) / (data.length || 1))
+      }), {
+        views_count: 0,
+        avg_watch_duration: 0,
+        avg_watch_percentage: 0
+      });
       
-      return data;
+      return aggregatedMetrics;
     },
     enabled: !!session?.user?.id
   });
@@ -119,6 +140,12 @@ const Engagement = () => {
                   title="Average Watch Percentage"
                   value={`${Math.round(performanceMetrics.avg_watch_percentage || 0)}%`}
                   change={"+3.8%"}
+                  positive
+                />
+                <MetricCard
+                  title="Total Views"
+                  value={performanceMetrics.views_count?.toString() || "0"}
+                  change={"+10.5%"}
                   positive
                 />
               </>
