@@ -3,11 +3,12 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@supabase/auth-helpers-react";
 import { MetricCard } from "@/components/MetricCard";
+import { toast } from "sonner";
 
 const Engagement = () => {
   const session = useSession();
 
-  const { data: engagementData } = useQuery({
+  const { data: engagementData, isError: isEngagementError } = useQuery({
     queryKey: ['engagement-metrics'],
     queryFn: async () => {
       if (!session?.user?.id) return null;
@@ -26,13 +27,17 @@ const Engagement = () => {
         .select('*')
         .in('video_id', videoIds);
 
-      if (error) throw error;
+      if (error) {
+        toast.error('Failed to fetch engagement data');
+        throw error;
+      }
+      
       return data;
     },
     enabled: !!session?.user?.id
   });
 
-  const { data: performanceMetrics } = useQuery({
+  const { data: performanceMetrics, isError: isPerformanceError } = useQuery({
     queryKey: ['performance-metrics'],
     queryFn: async () => {
       if (!session?.user?.id) return null;
@@ -41,17 +46,37 @@ const Engagement = () => {
         .from('performance_metrics')
         .select('*')
         .eq('user_id', session.user.id)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') throw error;
+      if (error && error.code !== 'PGRST116') {
+        toast.error('Failed to fetch performance metrics');
+        throw error;
+      }
+      
       return data;
     },
     enabled: !!session?.user?.id
   });
 
+  if (!session) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-youtube-darker">
+        <p className="text-white text-xl">Please sign in to view engagement analytics</p>
+      </div>
+    );
+  }
+
   const totalLikes = engagementData?.filter(e => e.type === 'like').length || 0;
   const totalComments = engagementData?.filter(e => e.type === 'comment').length || 0;
   const totalShares = engagementData?.filter(e => e.type === 'share').length || 0;
+
+  if (isEngagementError || isPerformanceError) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-youtube-darker">
+        <p className="text-red-500">Failed to load analytics data. Please try again later.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex bg-youtube-darker min-h-screen">
@@ -64,21 +89,21 @@ const Engagement = () => {
             <MetricCard
               title="Total Likes"
               value={totalLikes.toString()}
-              change="+12.3%"
+              change={"+12.3%"}
               positive
             />
             
             <MetricCard
               title="Total Comments"
               value={totalComments.toString()}
-              change="+8.1%"
+              change={"+8.1%"}
               positive
             />
             
             <MetricCard
               title="Total Shares"
               value={totalShares.toString()}
-              change="+15.7%"
+              change={"+15.7%"}
               positive
             />
 
@@ -87,13 +112,13 @@ const Engagement = () => {
                 <MetricCard
                   title="Average Watch Duration"
                   value={`${Math.round((performanceMetrics.avg_watch_duration || 0) / 60)}m`}
-                  change="+5.2%"
+                  change={"+5.2%"}
                   positive
                 />
                 <MetricCard
                   title="Average Watch Percentage"
                   value={`${Math.round(performanceMetrics.avg_watch_percentage || 0)}%`}
-                  change="+3.8%"
+                  change={"+3.8%"}
                   positive
                 />
               </>
