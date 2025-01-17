@@ -6,6 +6,7 @@ import { useSession } from "@supabase/auth-helpers-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { VideoUploadDialog } from "@/components/upload/VideoUploadDialog";
 
 const Content = () => {
   const [videos, setVideos] = useState<Video[]>([]);
@@ -75,11 +76,14 @@ const Content = () => {
       <Sidebar />
       <main className="flex-1 p-8">
         <div className="max-w-7xl mx-auto">
-          <h1 className="text-2xl font-bold text-white mb-8">Your Content</h1>
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="text-2xl font-bold text-white">Your Content</h1>
+            <VideoUploadDialog onUploadComplete={(video) => setVideos([...videos, video])} />
+          </div>
           {isError ? (
             <p className="text-red-500">Failed to load videos. Please try again later.</p>
           ) : (
-            <VideoList videos={userVideos || videos} setVideos={setVideos} />
+            <VideoList videos={userVideos || videos} setVideos={setVideos} showOnlyUserVideos={true} />
           )}
         </div>
       </main>

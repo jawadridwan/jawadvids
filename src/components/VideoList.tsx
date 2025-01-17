@@ -3,21 +3,30 @@ import { VideoActions } from "./video/VideoActions";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Video } from "@/types/video";
-import { AnalyticsChart } from "./AnalyticsChart";
 
 interface VideoListProps {
   videos: Video[];
   setVideos: (videos: Video[]) => void;
+  showOnlyUserVideos?: boolean;
 }
 
-export const VideoList = ({ videos: initialVideos, setVideos }: VideoListProps) => {
+export const VideoList = ({ videos: initialVideos, setVideos, showOnlyUserVideos = false }: VideoListProps) => {
   const { data: videos = initialVideos } = useQuery<Video[]>({
-    queryKey: ['videos'],
+    queryKey: ['videos', showOnlyUserVideos],
     queryFn: async () => {
       console.log('Fetching videos from Supabase');
-      const { data: videosData, error: videosError } = await supabase
+      let query = supabase
         .from('videos')
         .select('*, reactions(type)');
+
+      if (showOnlyUserVideos) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          query = query.eq('user_id', user.id);
+        }
+      }
+
+      const { data: videosData, error: videosError } = await query;
 
       if (videosError) {
         console.error('Error fetching videos:', videosError);
@@ -54,28 +63,25 @@ export const VideoList = ({ videos: initialVideos, setVideos }: VideoListProps) 
   }
 
   return (
-    <div className="space-y-8">
-      <AnalyticsChart />
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {videos.map((video) => (
-          <div key={video.id} className="relative group">
-            <VideoCard
-              id={video.id}
-              title={video.title}
-              views={video.views}
-              thumbnail={video.thumbnail}
-              description={video.description || ''}
-              hashtags={video.hashtags}
-              status={video.status}
-              url={video.url}
-              likes={video.likes}
-              dislikes={video.dislikes}
-              user_id={video.user_id}
-            />
-            <VideoActions video={video} />
-          </div>
-        ))}
-      </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {videos.map((video) => (
+        <div key={video.id} className="relative group">
+          <VideoCard
+            id={video.id}
+            title={video.title}
+            views={video.views}
+            thumbnail={video.thumbnail}
+            description={video.description || ''}
+            hashtags={video.hashtags}
+            status={video.status}
+            url={video.url}
+            likes={video.likes}
+            dislikes={video.dislikes}
+            user_id={video.user_id}
+          />
+          <VideoActions video={video} />
+        </div>
+      ))}
     </div>
   );
 };
