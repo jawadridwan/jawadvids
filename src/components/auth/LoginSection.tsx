@@ -31,9 +31,7 @@ export const LoginSection = ({ onSignUpClick }: LoginSectionProps) => {
   };
 
   return (
-    <form onSubmit={handleLogin} className="flex flex-col items-center w-full">
-      <h2 className="text-3xl text-white text-center mb-8">Login</h2>
-      
+    <form onSubmit={handleLogin} className="flex flex-col items-center w-full">      
       <div className="relative w-full mb-8 border-b-2 border-white group">
         <input
           type="email"
