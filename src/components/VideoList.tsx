@@ -3,6 +3,8 @@ import { VideoActions } from "./video/VideoActions";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Video } from "@/types/video";
+import { useSession } from "@supabase/auth-helpers-react";
+import { toast } from "sonner";
 
 interface VideoListProps {
   videos: Video[];
@@ -11,48 +13,71 @@ interface VideoListProps {
 }
 
 export const VideoList = ({ videos: initialVideos, setVideos, showOnlyUserVideos = false }: VideoListProps) => {
-  const { data: videos = initialVideos } = useQuery<Video[]>({
+  const session = useSession();
+
+  const { data: videos = initialVideos, isError } = useQuery({
     queryKey: ['videos', showOnlyUserVideos],
     queryFn: async () => {
-      console.log('Fetching videos from Supabase');
-      let query = supabase
-        .from('videos')
-        .select('*, reactions(type)');
+      try {
+        console.log('Fetching videos from Supabase');
+        let query = supabase
+          .from('videos')
+          .select(`
+            *,
+            reactions (
+              type
+            )
+          `);
 
-      if (showOnlyUserVideos) {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          query = query.eq('user_id', user.id);
+        if (showOnlyUserVideos && session?.user) {
+          query = query.eq('user_id', session.user.id);
         }
+
+        const { data: videosData, error: videosError } = await query;
+
+        if (videosError) {
+          console.error('Error fetching videos:', videosError);
+          toast.error('Failed to load videos');
+          throw videosError;
+        }
+
+        if (!videosData) {
+          return [];
+        }
+
+        return videosData.map((video: any) => ({
+          id: video.id,
+          title: video.title,
+          description: video.description,
+          views: '0',
+          status: video.status || 'ready' as const,
+          uploadDate: video.created_at,
+          thumbnail: video.thumbnail_url || '/placeholder.svg',
+          hashtags: [],
+          created_at: video.created_at,
+          updated_at: video.updated_at,
+          user_id: video.user_id,
+          thumbnail_url: video.thumbnail_url,
+          url: video.url,
+          likes: video.reactions?.filter((r: any) => r.type === 'like').length || 0,
+          dislikes: video.reactions?.filter((r: any) => r.type === 'dislike').length || 0
+        }));
+      } catch (error) {
+        console.error('Error in video query:', error);
+        toast.error('Failed to load videos');
+        return initialVideos;
       }
-
-      const { data: videosData, error: videosError } = await query;
-
-      if (videosError) {
-        console.error('Error fetching videos:', videosError);
-        throw videosError;
-      }
-
-      return videosData.map((video: any) => ({
-        id: video.id,
-        title: video.title,
-        description: video.description,
-        views: '0',
-        status: video.status || 'ready' as const,
-        uploadDate: video.created_at,
-        thumbnail: video.thumbnail_url || '/placeholder.svg',
-        hashtags: [],
-        created_at: video.created_at,
-        updated_at: video.updated_at,
-        user_id: video.user_id,
-        thumbnail_url: video.thumbnail_url,
-        url: video.url,
-        likes: video.reactions?.filter((r: any) => r.type === 'like').length || 0,
-        dislikes: video.reactions?.filter((r: any) => r.type === 'dislike').length || 0
-      }));
     },
     initialData: initialVideos,
   });
+
+  if (isError) {
+    return (
+      <div className="text-center text-red-500 py-12">
+        Failed to load videos. Please try again later.
+      </div>
+    );
+  }
 
   if (!videos || videos.length === 0) {
     return (
