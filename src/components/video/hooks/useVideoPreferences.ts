@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 export interface VideoPreferences {
   volume: number;
   playbackSpeed: number;
-  quality: string;
   autoScroll: boolean;
   scrollThreshold: number;
   scrollSpeed: number;
@@ -12,7 +11,6 @@ export interface VideoPreferences {
 const DEFAULT_PREFERENCES: VideoPreferences = {
   volume: 1,
   playbackSpeed: 1,
-  quality: 'auto',
   autoScroll: true,
   scrollThreshold: 0.8,
   scrollSpeed: 1000,

@@ -7,6 +7,7 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Gauge } from 'lucide-react';
 
 interface VideoPlaybackSpeedProps {
   speed: number;
@@ -20,14 +21,15 @@ export const VideoPlaybackSpeed = ({ speed, onSpeedChange }: VideoPlaybackSpeedP
         <Button
           variant="ghost"
           size="sm"
-          className="text-white text-sm hover:bg-white/10"
+          className="text-white text-sm hover:bg-white/10 flex items-center gap-2"
         >
-          {speed}x
+          <Gauge className="w-4 h-4" />
+          <span className="hidden sm:inline">{speed}x</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="bg-black/90 border-white/10">
         <DropdownMenuRadioGroup value={speed.toString()} onValueChange={(value) => onSpeedChange(Number(value))}>
-          {[0.5, 1, 1.5, 2].map((speedOption) => (
+          {[0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2].map((speedOption) => (
             <DropdownMenuRadioItem
               key={speedOption}
               value={speedOption.toString()}

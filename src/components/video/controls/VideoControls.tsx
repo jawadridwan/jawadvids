@@ -2,7 +2,6 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 import { VideoVolume } from './VideoVolume';
 import { VideoPlaybackSpeed } from './VideoPlaybackSpeed';
-import { VideoQualitySelector } from './VideoQualitySelector';
 import { PlaybackControls } from './PlaybackControls';
 import { ViewModeControls } from './ViewModeControls';
 import { VideoPreferences } from '../hooks/useVideoPreferences';
@@ -61,7 +60,7 @@ export const VideoControls = ({
           videoRef={videoRef}
         />
 
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-2">
             <VideoVolume
               volume={preferences.volume}
@@ -72,11 +71,6 @@ export const VideoControls = ({
             <VideoPlaybackSpeed
               speed={preferences.playbackSpeed}
               onSpeedChange={(value) => onPreferenceChange('playbackSpeed', value)}
-            />
-
-            <VideoQualitySelector
-              quality={preferences.quality}
-              onQualityChange={(value) => onPreferenceChange('quality', value)}
             />
           </div>
 
