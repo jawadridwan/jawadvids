@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { VideoCardActions } from "./video/VideoCardActions";
 import { Button } from "./ui/button";
 import { Maximize2, Minimize2 } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface VideoCardProps {
   id: string;
@@ -40,6 +41,7 @@ export const VideoCard = ({
 }: VideoCardProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [videoSize, setVideoSize] = useState<'default' | 'medium' | 'fullscreen'>('default');
+  const isMobile = useIsMobile();
 
   const { data: engagementMetrics } = useQuery({
     queryKey: ['engagement-metrics', id],
@@ -70,6 +72,10 @@ export const VideoCard = ({
   };
 
   const toggleVideoSize = () => {
+    if (isMobile) {
+      setVideoSize(prev => prev === 'fullscreen' ? 'default' : 'fullscreen');
+      return;
+    }
     setVideoSize(prev => {
       if (prev === 'default') return 'medium';
       if (prev === 'medium') return 'fullscreen';
@@ -79,11 +85,11 @@ export const VideoCard = ({
 
   return (
     <div className={cn(
-      "bg-youtube-dark rounded-xl overflow-hidden animate-fade-in transition-transform",
+      "bg-youtube-dark rounded-xl overflow-hidden animate-fade-in transition-all duration-300",
       videoSize === 'default' && "hover:scale-105",
       className
     )}>
-      <div className="relative">
+      <div className="relative group">
         {url && status === 'ready' ? (
           <div className="relative">
             <EnhancedVideoPlayer
@@ -92,14 +98,15 @@ export const VideoCard = ({
               onTimeUpdate={handleTimeUpdate}
               onPlayStateChange={setIsPlaying}
               className={cn(
+                "w-full",
                 videoSize === 'medium' && "w-[854px] h-[480px]",
-                videoSize === 'fullscreen' && "fixed inset-0 z-50"
+                videoSize === 'fullscreen' && "fixed inset-0 z-50 h-screen"
               )}
             />
             <Button
               variant="ghost"
               size="icon"
-              className="absolute top-2 right-2 text-white bg-black/50 hover:bg-black/70"
+              className="absolute top-2 right-2 text-white bg-black/50 hover:bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity"
               onClick={toggleVideoSize}
             >
               {videoSize === 'fullscreen' ? (
@@ -125,19 +132,19 @@ export const VideoCard = ({
           </Badge>
         )}
       </div>
-      <div className="p-4">
-        <h3 className="text-white font-medium mb-2 line-clamp-2">{title}</h3>
+      <div className="p-4 space-y-3">
+        <h3 className="text-white font-medium line-clamp-2 text-base md:text-lg">{title}</h3>
         {description && (
-          <p className="text-youtube-gray text-sm mb-2 line-clamp-2">{description}</p>
+          <p className="text-youtube-gray text-sm line-clamp-2">{description}</p>
         )}
-        <div className="flex flex-wrap gap-2 mb-2">
+        <div className="flex flex-wrap gap-2">
           {hashtags?.map((tag, index) => (
             <span key={index} className="text-blue-400 text-xs hover:underline cursor-pointer">
               #{tag}
             </span>
           ))}
         </div>
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between pt-2">
           <p className="text-youtube-gray text-sm">{views} views</p>
           <VideoCardActions
             videoId={id}

@@ -7,20 +7,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
 import { toast } from "sonner";
 import { Video } from "@/types/video";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Index = () => {
   const [videos, setVideos] = useState<Video[]>([]);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
-    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);
     });
 
-    // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -35,7 +35,6 @@ const Index = () => {
     toast.success("Video uploaded successfully!");
   };
 
-  // Show loading state
   if (loading) {
     return (
       <div className="min-h-screen bg-youtube-darker flex items-center justify-center">
@@ -44,23 +43,50 @@ const Index = () => {
     );
   }
 
-  // Show auth component if not authenticated
   if (!session) {
     return <AuthComponent />;
   }
 
   return (
-    <div className="flex bg-youtube-darker min-h-screen touch-pan-y">
+    <div className="flex flex-col md:flex-row bg-youtube-darker min-h-screen touch-pan-y">
       <Sidebar />
-      <main className="flex-1 p-8 overflow-auto">
+      <main className="flex-1 p-4 md:p-8 overflow-auto">
         <div className="max-w-7xl mx-auto">
-          <div className="flex justify-between items-center mb-8">
-            <h1 className="text-2xl font-bold text-white">Dashboard</h1>
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
+            <h1 className="text-2xl md:text-3xl font-bold text-white text-center md:text-left">
+              Dashboard
+            </h1>
             <VideoUploadDialog onUploadComplete={handleUploadComplete} />
           </div>
 
-          <h2 className="text-xl font-bold text-white mb-4">Your Videos</h2>
-          <VideoList videos={videos} setVideos={setVideos} />
+          <div className="space-y-6">
+            <div className="bg-youtube-dark rounded-xl p-6 animate-fade-in">
+              <h2 className="text-xl font-bold text-white mb-4">Quick Stats</h2>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-youtube-darker p-4 rounded-lg">
+                  <p className="text-youtube-gray text-sm">Total Videos</p>
+                  <p className="text-2xl font-bold text-white">{videos.length}</p>
+                </div>
+                <div className="bg-youtube-darker p-4 rounded-lg">
+                  <p className="text-youtube-gray text-sm">Total Views</p>
+                  <p className="text-2xl font-bold text-white">0</p>
+                </div>
+                <div className="bg-youtube-darker p-4 rounded-lg">
+                  <p className="text-youtube-gray text-sm">Total Likes</p>
+                  <p className="text-2xl font-bold text-white">0</p>
+                </div>
+                <div className="bg-youtube-darker p-4 rounded-lg">
+                  <p className="text-youtube-gray text-sm">Comments</p>
+                  <p className="text-2xl font-bold text-white">0</p>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h2 className="text-xl font-bold text-white mb-4">Your Videos</h2>
+              <VideoList videos={videos} setVideos={setVideos} />
+            </div>
+          </div>
         </div>
       </main>
     </div>
