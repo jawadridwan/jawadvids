@@ -7,6 +7,15 @@ import { useEffect } from "react";
 import { useSession } from "@supabase/auth-helpers-react";
 import { toast } from "sonner";
 
+interface VideoWithMetrics {
+  id: string;
+  reactions: { type: string }[];
+  performance_metrics: {
+    views_count: number;
+    comments_count: number;
+  }[];
+}
+
 const Analytics = () => {
   const session = useSession();
   
@@ -20,7 +29,8 @@ const Analytics = () => {
       
       if (error) throw error;
       return data;
-    }
+    },
+    enabled: !!session?.user?.id
   });
 
   const { data: videoStats } = useQuery({
@@ -43,15 +53,17 @@ const Analytics = () => {
 
         if (videosError) throw videosError;
 
-        const totalVideos = videos?.length || 0;
-        const totalViews = videos?.reduce((sum, video) => {
+        const typedVideos = videos as VideoWithMetrics[];
+        
+        const totalVideos = typedVideos?.length || 0;
+        const totalViews = typedVideos?.reduce((sum, video) => {
           const metrics = video.performance_metrics?.[0];
           return sum + (metrics?.views_count || 0);
         }, 0) || 0;
-        const totalLikes = videos?.reduce((sum, video) => {
+        const totalLikes = typedVideos?.reduce((sum, video) => {
           return sum + (video.reactions?.filter(r => r.type === 'like').length || 0);
         }, 0) || 0;
-        const totalComments = videos?.reduce((sum, video) => {
+        const totalComments = typedVideos?.reduce((sum, video) => {
           const metrics = video.performance_metrics?.[0];
           return sum + (metrics?.comments_count || 0);
         }, 0) || 0;
@@ -86,6 +98,14 @@ const Analytics = () => {
       supabase.removeChannel(channel);
     };
   }, [refetch]);
+
+  if (!session) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-youtube-darker">
+        <p className="text-white text-xl">Please sign in to view analytics</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex bg-[#1F1F1F] min-h-screen touch-pan-y">

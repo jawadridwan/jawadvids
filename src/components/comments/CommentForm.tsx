@@ -37,9 +37,18 @@ export const CommentForm = ({ videoId, onCommentAdded }: CommentFormProps) => {
           content: comment.trim(),
           video_id: videoId,
           user_id: session.user.id
-        });
+        })
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (error) {
+        if (error.code === '23505') { // Unique constraint violation
+          toast.error("You've already posted this exact comment");
+        } else {
+          throw error;
+        }
+        return;
+      }
 
       toast.success("Comment added successfully");
       setComment("");
