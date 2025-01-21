@@ -1,37 +1,66 @@
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export const AnalyticsChart = () => {
   const { data: viewsData } = useQuery({
     queryKey: ['views-over-time'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('views')
-        .select('timestamp')
-        .order('timestamp', { ascending: true });
-      
-      if (error) throw error;
+      try {
+        // First get the user's videos
+        const { data: userVideos, error: videosError } = await supabase
+          .from('videos')
+          .select('id')
+          .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
 
-      // Group views by day
-      const groupedData = data.reduce((acc: any, view) => {
-        const date = new Date(view.timestamp).toLocaleDateString('en-US', { weekday: 'short' });
-        acc[date] = (acc[date] || 0) + 1;
-        return acc;
-      }, {});
+        if (videosError) {
+          console.error('Error fetching user videos:', videosError);
+          toast.error('Failed to load analytics data');
+          return [];
+        }
 
-      // If no data, provide some default values
-      if (Object.keys(groupedData).length === 0) {
-        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-        days.forEach(day => {
-          groupedData[day] = 0;
-        });
+        if (!userVideos?.length) {
+          return [];
+        }
+
+        // Then get views for those videos
+        const { data, error } = await supabase
+          .from('views')
+          .select('timestamp')
+          .in('video_id', userVideos.map(v => v.id))
+          .order('timestamp', { ascending: true });
+        
+        if (error) {
+          console.error('Error fetching views:', error);
+          toast.error('Failed to load views data');
+          return [];
+        }
+
+        // Group views by day
+        const groupedData = data.reduce((acc: any, view) => {
+          const date = new Date(view.timestamp).toLocaleDateString('en-US', { weekday: 'short' });
+          acc[date] = (acc[date] || 0) + 1;
+          return acc;
+        }, {});
+
+        // If no data, provide some default values
+        if (Object.keys(groupedData).length === 0) {
+          const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+          days.forEach(day => {
+            groupedData[day] = 0;
+          });
+        }
+
+        return Object.entries(groupedData).map(([date, views]) => ({
+          date,
+          views,
+        }));
+      } catch (error) {
+        console.error('Error in views query:', error);
+        toast.error('Failed to load analytics data');
+        return [];
       }
-
-      return Object.entries(groupedData).map(([date, views]) => ({
-        date,
-        views,
-      }));
     }
   });
 
