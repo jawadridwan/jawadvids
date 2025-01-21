@@ -9,6 +9,7 @@ import { VideoCardActions } from "./video/VideoCardActions";
 import { Button } from "./ui/button";
 import { Maximize2, Minimize2 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { toast } from "sonner";
 
 interface VideoCardProps {
   id: string;
@@ -46,23 +47,29 @@ export const VideoCard = ({
   const { data: engagementMetrics } = useQuery({
     queryKey: ['engagement-metrics', id],
     queryFn: async () => {
-      const { data: metrics, error } = await supabase
-        .from('performance_metrics')
-        .select('*')
-        .eq('video_id', id)
-        .maybeSingle();
+      try {
+        const { data: metrics, error } = await supabase
+          .from('performance_metrics')
+          .select('*')
+          .eq('video_id', id)
+          .maybeSingle();
 
-      if (error) {
-        console.error('Error fetching engagement metrics:', error);
+        if (error) {
+          console.error('Error fetching engagement metrics:', error);
+          toast.error('Failed to load engagement metrics');
+          return null;
+        }
+
+        return metrics || {
+          views_count: 0,
+          likes_count: 0,
+          comments_count: 0,
+          shares_count: 0
+        };
+      } catch (error) {
+        console.error('Error in engagement metrics query:', error);
         return null;
       }
-
-      return metrics || {
-        views_count: 0,
-        likes_count: 0,
-        comments_count: 0,
-        shares_count: 0
-      };
     },
     enabled: !!id
   });
