@@ -30,11 +30,6 @@ const Index = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const handleUploadComplete = (videoData: Video) => {
-    setVideos(prev => [...prev, videoData]);
-    toast.success("Video uploaded successfully!");
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-youtube-darker flex items-center justify-center">
@@ -56,36 +51,12 @@ const Index = () => {
             <h1 className="text-2xl md:text-3xl font-bold text-white text-center md:text-left">
               Dashboard
             </h1>
-            <VideoUploadDialog onUploadComplete={handleUploadComplete} />
+            <VideoUploadDialog onUploadComplete={(video) => setVideos([...videos, video])} />
           </div>
 
-          <div className="space-y-6">
-            <div className="bg-youtube-dark rounded-xl p-6 animate-fade-in">
-              <h2 className="text-xl font-bold text-white mb-4">Quick Stats</h2>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-youtube-darker p-4 rounded-lg">
-                  <p className="text-youtube-gray text-sm">Total Videos</p>
-                  <p className="text-2xl font-bold text-white">{videos.length}</p>
-                </div>
-                <div className="bg-youtube-darker p-4 rounded-lg">
-                  <p className="text-youtube-gray text-sm">Total Views</p>
-                  <p className="text-2xl font-bold text-white">0</p>
-                </div>
-                <div className="bg-youtube-darker p-4 rounded-lg">
-                  <p className="text-youtube-gray text-sm">Total Likes</p>
-                  <p className="text-2xl font-bold text-white">0</p>
-                </div>
-                <div className="bg-youtube-darker p-4 rounded-lg">
-                  <p className="text-youtube-gray text-sm">Comments</p>
-                  <p className="text-2xl font-bold text-white">0</p>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <h2 className="text-xl font-bold text-white mb-4">Your Videos</h2>
-              <VideoList videos={videos} setVideos={setVideos} />
-            </div>
+          <div>
+            <h2 className="text-xl font-bold text-white mb-4">Your Videos</h2>
+            <VideoList videos={videos} setVideos={setVideos} />
           </div>
         </div>
       </main>

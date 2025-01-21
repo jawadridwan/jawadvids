@@ -4,19 +4,61 @@ import { AnalyticsChart } from "@/components/AnalyticsChart";
 import { Sidebar } from "@/components/Sidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
+import { useSession } from "@supabase/auth-helpers-react";
+import { toast } from "sonner";
 
 const Analytics = () => {
+  const session = useSession();
+  
   const { data: metrics, refetch } = useQuery({
     queryKey: ['performance-metrics'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('performance_metrics')
         .select('*')
-        .single();
+        .maybeSingle();
       
       if (error) throw error;
       return data;
     }
+  });
+
+  const { data: videoStats } = useQuery({
+    queryKey: ['video-stats'],
+    queryFn: async () => {
+      if (!session?.user?.id) return null;
+      
+      try {
+        const { data: videos, error: videosError } = await supabase
+          .from('videos')
+          .select(`
+            *,
+            reactions (type)
+          `)
+          .eq('user_id', session.user.id);
+
+        if (videosError) throw videosError;
+
+        const totalVideos = videos?.length || 0;
+        const totalViews = videos?.reduce((sum, video) => sum + (video.views_count || 0), 0) || 0;
+        const totalLikes = videos?.reduce((sum, video) => {
+          return sum + (video.reactions?.filter(r => r.type === 'like').length || 0);
+        }, 0) || 0;
+        const totalComments = videos?.reduce((sum, video) => sum + (video.comments_count || 0), 0) || 0;
+
+        return {
+          totalVideos,
+          totalViews,
+          totalLikes,
+          totalComments
+        };
+      } catch (error) {
+        console.error('Error fetching video stats:', error);
+        toast.error('Failed to load video statistics');
+        return null;
+      }
+    },
+    enabled: !!session?.user?.id
   });
 
   useEffect(() => {
@@ -42,6 +84,28 @@ const Analytics = () => {
         <div className="max-w-7xl mx-auto">
           <h1 className="text-2xl font-bold text-white mb-8">Analytics</h1>
           
+          <div className="bg-youtube-dark rounded-xl p-6 mb-8 animate-fade-in">
+            <h2 className="text-xl font-bold text-white mb-4">Quick Stats</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-youtube-darker p-4 rounded-lg">
+                <p className="text-youtube-gray text-sm">Total Videos</p>
+                <p className="text-2xl font-bold text-white">{videoStats?.totalVideos || 0}</p>
+              </div>
+              <div className="bg-youtube-darker p-4 rounded-lg">
+                <p className="text-youtube-gray text-sm">Total Views</p>
+                <p className="text-2xl font-bold text-white">{videoStats?.totalViews || 0}</p>
+              </div>
+              <div className="bg-youtube-darker p-4 rounded-lg">
+                <p className="text-youtube-gray text-sm">Total Likes</p>
+                <p className="text-2xl font-bold text-white">{videoStats?.totalLikes || 0}</p>
+              </div>
+              <div className="bg-youtube-darker p-4 rounded-lg">
+                <p className="text-youtube-gray text-sm">Total Comments</p>
+                <p className="text-2xl font-bold text-white">{videoStats?.totalComments || 0}</p>
+              </div>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 touch-pan-x">
             <MetricCard 
               title="Total Views" 

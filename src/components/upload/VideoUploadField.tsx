@@ -12,10 +12,10 @@ export const VideoUploadField = ({ onVideoSelect, disabled }: VideoUploadFieldPr
   const handleVideoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 100 * 1024 * 1024) {
+      if (file.size > 2 * 1024 * 1024 * 1024) { // 2GB in bytes
         toast({
           title: "File too large",
-          description: "Please select a video file under 100MB.",
+          description: "Please select a video file under 2GB.",
           variant: "destructive",
         });
         return;
