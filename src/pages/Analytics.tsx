@@ -33,18 +33,28 @@ const Analytics = () => {
           .from('videos')
           .select(`
             *,
-            reactions (type)
+            reactions (type),
+            performance_metrics (
+              views_count,
+              comments_count
+            )
           `)
           .eq('user_id', session.user.id);
 
         if (videosError) throw videosError;
 
         const totalVideos = videos?.length || 0;
-        const totalViews = videos?.reduce((sum, video) => sum + (video.views_count || 0), 0) || 0;
+        const totalViews = videos?.reduce((sum, video) => {
+          const metrics = video.performance_metrics?.[0];
+          return sum + (metrics?.views_count || 0);
+        }, 0) || 0;
         const totalLikes = videos?.reduce((sum, video) => {
           return sum + (video.reactions?.filter(r => r.type === 'like').length || 0);
         }, 0) || 0;
-        const totalComments = videos?.reduce((sum, video) => sum + (video.comments_count || 0), 0) || 0;
+        const totalComments = videos?.reduce((sum, video) => {
+          const metrics = video.performance_metrics?.[0];
+          return sum + (metrics?.comments_count || 0);
+        }, 0) || 0;
 
         return {
           totalVideos,
