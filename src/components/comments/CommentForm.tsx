@@ -35,6 +35,22 @@ export const CommentForm = ({ videoId, onCommentAdded, parentId }: CommentFormPr
     setIsSubmitting(true);
 
     try {
+      // First check if a similar comment exists
+      const { data: existingComments } = await supabase
+        .from('comments')
+        .select('id')
+        .eq('video_id', videoId)
+        .eq('user_id', session.user.id)
+        .eq('content', comment.trim())
+        .is('deleted_at', null)
+        .maybeSingle();
+
+      if (existingComments) {
+        toast.error("You've already posted this exact comment");
+        return;
+      }
+
+      // If no duplicate exists, insert the new comment
       const { error } = await supabase
         .from('comments')
         .insert({
@@ -42,17 +58,11 @@ export const CommentForm = ({ videoId, onCommentAdded, parentId }: CommentFormPr
           video_id: videoId,
           user_id: session.user.id,
           parent_id: parentId || null
-        })
-        .select()
-        .single();
+        });
 
       if (error) {
-        if (error.code === '23505') { // Unique constraint violation
-          toast.error("You've already posted this exact comment");
-        } else {
-          throw error;
-        }
-        return;
+        console.error('Error adding comment:', error);
+        throw error;
       }
 
       toast.success("Comment added successfully");
