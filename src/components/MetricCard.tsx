@@ -2,10 +2,11 @@ import { cn } from "@/lib/utils";
 
 interface MetricCardProps {
   title: string;
-  value: string;
-  change: string;
+  value: string | number;
+  change?: string;
   positive?: boolean;
   className?: string;
+  icon?: string;
 }
 
 export const MetricCard = ({ title, value, change, positive, className }: MetricCardProps) => {
@@ -14,9 +15,11 @@ export const MetricCard = ({ title, value, change, positive, className }: Metric
       <h3 className="text-youtube-gray mb-2 text-sm">{title}</h3>
       <div className="flex items-end gap-3">
         <span className="text-2xl font-bold text-white">{value}</span>
-        <span className={cn("text-sm", positive ? "text-green-500" : "text-youtube-red")}>
-          {change}
-        </span>
+        {change && (
+          <span className={cn("text-sm", positive ? "text-green-500" : "text-youtube-red")}>
+            {change}
+          </span>
+        )}
       </div>
     </div>
   );

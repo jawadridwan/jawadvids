@@ -137,7 +137,7 @@ const Analytics = () => {
 
           <div className="bg-youtube-dark rounded-lg p-6">
             <h2 className="text-xl font-semibold text-white mb-4">Performance Over Time</h2>
-            <AnalyticsChart data={videos || []} />
+            <AnalyticsChart />
           </div>
         </div>
       </main>
