@@ -1,8 +1,8 @@
-import { useQuery } from "@tanstack/react-query";
+import { Sidebar } from "@/components/Sidebar";
 import { MetricCard } from "@/components/MetricCard";
 import { AnalyticsChart } from "@/components/AnalyticsChart";
-import { Sidebar } from "@/components/Sidebar";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { useSession } from "@supabase/auth-helpers-react";
 import { toast } from "sonner";
@@ -18,15 +18,19 @@ interface VideoWithMetrics {
 
 const Analytics = () => {
   const session = useSession();
-  
-  const { data: metrics, refetch } = useQuery({
-    queryKey: ['performance-metrics'],
+
+  const { data: videos, refetch } = useQuery({
+    queryKey: ['videos', session?.user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('performance_metrics')
-        .select('*')
-        .maybeSingle();
-      
+        .from('videos')
+        .select(`
+          *,
+          reactions (type),
+          performance_metrics (views_count, comments_count)
+        `)
+        .eq('user_id', session?.user?.id);
+
       if (error) throw error;
       return data;
     },
@@ -34,24 +38,10 @@ const Analytics = () => {
   });
 
   const { data: videoStats } = useQuery({
-    queryKey: ['video-stats'],
+    queryKey: ['videoStats', videos],
     queryFn: async () => {
-      if (!session?.user?.id) return null;
-      
       try {
-        const { data: videos, error: videosError } = await supabase
-          .from('videos')
-          .select(`
-            *,
-            reactions (type),
-            performance_metrics (
-              views_count,
-              comments_count
-            )
-          `)
-          .eq('user_id', session.user.id);
-
-        if (videosError) throw videosError;
+        if (!videos) return null;
 
         const typedVideos = videos as VideoWithMetrics[];
         
@@ -75,24 +65,32 @@ const Analytics = () => {
           totalComments
         };
       } catch (error) {
-        console.error('Error fetching video stats:', error);
-        toast.error('Failed to load video statistics');
+        console.error('Error calculating video stats:', error);
         return null;
       }
     },
-    enabled: !!session?.user?.id
+    enabled: !!videos
   });
 
   useEffect(() => {
     const channel = supabase
-      .channel('analytics')
-      .on('postgres_changes', 
-        { event: '*', schema: 'public', table: 'performance_metrics' }, 
+      .channel('analytics_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'videos'
+        },
         () => {
           refetch();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('Subscribed to analytics changes');
+        }
+      });
 
     return () => {
       supabase.removeChannel(channel);
@@ -110,60 +108,36 @@ const Analytics = () => {
   return (
     <div className="flex bg-[#1F1F1F] min-h-screen touch-pan-y">
       <Sidebar />
-      <main className="flex-1 p-8 overflow-auto">
+      <main className="flex-1 p-6">
         <div className="max-w-7xl mx-auto">
-          <h1 className="text-2xl font-bold text-white mb-8">Analytics</h1>
+          <h1 className="text-2xl font-bold text-white mb-6">Analytics Dashboard</h1>
           
-          <div className="bg-youtube-dark rounded-xl p-6 mb-8 animate-fade-in">
-            <h2 className="text-xl font-bold text-white mb-4">Quick Stats</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-youtube-darker p-4 rounded-lg">
-                <p className="text-youtube-gray text-sm">Total Videos</p>
-                <p className="text-2xl font-bold text-white">{videoStats?.totalVideos || 0}</p>
-              </div>
-              <div className="bg-youtube-darker p-4 rounded-lg">
-                <p className="text-youtube-gray text-sm">Total Views</p>
-                <p className="text-2xl font-bold text-white">{videoStats?.totalViews || 0}</p>
-              </div>
-              <div className="bg-youtube-darker p-4 rounded-lg">
-                <p className="text-youtube-gray text-sm">Total Likes</p>
-                <p className="text-2xl font-bold text-white">{videoStats?.totalLikes || 0}</p>
-              </div>
-              <div className="bg-youtube-darker p-4 rounded-lg">
-                <p className="text-youtube-gray text-sm">Total Comments</p>
-                <p className="text-2xl font-bold text-white">{videoStats?.totalComments || 0}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 touch-pan-x">
-            <MetricCard 
-              title="Total Views" 
-              value={metrics?.views_count?.toLocaleString() || '0'} 
-              change="+12.3%" 
-              positive 
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <MetricCard
+              title="Total Videos"
+              value={videoStats?.totalVideos || 0}
+              icon="video"
             />
-            <MetricCard 
-              title="Total Likes" 
-              value={metrics?.likes_count?.toLocaleString() || '0'} 
-              change="+8.1%" 
-              positive 
+            <MetricCard
+              title="Total Views"
+              value={videoStats?.totalViews || 0}
+              icon="eye"
             />
-            <MetricCard 
-              title="Comments" 
-              value={metrics?.comments_count?.toLocaleString() || '0'} 
-              change="-2.4%" 
+            <MetricCard
+              title="Total Likes"
+              value={videoStats?.totalLikes || 0}
+              icon="thumbs-up"
             />
-            <MetricCard 
-              title="Avg. Watch Duration" 
-              value={`${Math.round((metrics?.avg_watch_duration || 0) / 60)}m`}
-              change="+1.2%" 
-              positive 
+            <MetricCard
+              title="Total Comments"
+              value={videoStats?.totalComments || 0}
+              icon="message-circle"
             />
           </div>
 
-          <div className="mb-8 touch-none">
-            <AnalyticsChart />
+          <div className="bg-youtube-dark rounded-lg p-6">
+            <h2 className="text-xl font-semibold text-white mb-4">Performance Over Time</h2>
+            <AnalyticsChart data={videos || []} />
           </div>
         </div>
       </main>
