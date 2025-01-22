@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { format } from "date-fns";
 
 interface Profile {
   full_name: string | null;
@@ -124,7 +123,16 @@ export const ProfileManager = () => {
           <Button
             variant="outline"
             className="w-full md:w-auto"
-            onClick={() => document.querySelector('input[type="file"]')?.click()}
+            onClick={() => {
+              const input = document.querySelector('input[type="file"]');
+              if (input) {
+                input.dispatchEvent(new MouseEvent('click', {
+                  bubbles: true,
+                  cancelable: true,
+                  view: window
+                }));
+              }
+            }}
           >
             Change Profile Picture
           </Button>

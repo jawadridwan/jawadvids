@@ -9,6 +9,7 @@ import { Session } from "@supabase/supabase-js";
 import { toast } from "sonner";
 import { Video } from "@/types/video";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Button } from "@/components/ui/button";
 
 const Index = () => {
   const [videos, setVideos] = useState<Video[]>([]);
