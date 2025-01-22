@@ -8,8 +8,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
 import { Video } from "@/types/video";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Button } from "@/components/ui/button";
-import { Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const Index = () => {
@@ -49,17 +47,6 @@ const Index = () => {
 
   return (
     <div className="flex flex-col md:flex-row bg-youtube-darker min-h-screen touch-pan-y">
-      {isMobile ? (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="fixed top-4 left-4 z-50"
-          onClick={() => setShowSidebar(!showSidebar)}
-        >
-          <Menu className="w-6 h-6" />
-        </Button>
-      ) : null}
-      
       <div className={cn(
         "md:relative fixed inset-y-0 left-0 z-40 transition-transform duration-300 ease-in-out transform",
         isMobile && !showSidebar && "-translate-x-full",
@@ -75,13 +62,12 @@ const Index = () => {
               Dashboard
             </h1>
             <div className="flex gap-4">
-              <Button
-                variant="outline"
+              <button
                 onClick={() => setShowProfile(!showProfile)}
-                className="whitespace-nowrap"
+                className="px-4 py-2 rounded-lg bg-youtube-dark text-white hover:bg-opacity-80 transition-colors"
               >
                 {showProfile ? "Hide Profile" : "Edit Profile"}
-              </Button>
+              </button>
               <VideoUploadDialog onUploadComplete={(video) => setVideos([...videos, video])} />
             </div>
           </div>
