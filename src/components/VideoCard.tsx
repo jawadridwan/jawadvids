@@ -1,7 +1,7 @@
 import { Badge } from "./ui/badge";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
-import { EnhancedVideoPlayer } from "./video/EnhancedVideoPlayer";
+import { VideoPlayer } from "./video/VideoPlayer";
 import { CommentSection } from "./comments/CommentSection";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -99,7 +99,7 @@ export const VideoCard = ({
       <div className="relative group">
         {url && status === 'ready' ? (
           <div className="relative">
-            <EnhancedVideoPlayer
+            <VideoPlayer
               url={url}
               thumbnail={thumbnail}
               onTimeUpdate={handleTimeUpdate}
@@ -109,6 +109,7 @@ export const VideoCard = ({
                 videoSize === 'medium' && "w-[854px] h-[480px]",
                 videoSize === 'fullscreen' && "fixed inset-0 z-50 h-screen"
               )}
+              allowDownload={true}
             />
             <Button
               variant="ghost"

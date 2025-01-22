@@ -10,12 +10,14 @@ import { toast } from "sonner";
 import { Video } from "@/types/video";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
+import { Menu } from "lucide-react";
 
 const Index = () => {
   const [videos, setVideos] = useState<Video[]>([]);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [showProfile, setShowProfile] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(false);
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -47,7 +49,25 @@ const Index = () => {
 
   return (
     <div className="flex flex-col md:flex-row bg-youtube-darker min-h-screen touch-pan-y">
-      <Sidebar />
+      {isMobile ? (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="fixed top-4 left-4 z-50"
+          onClick={() => setShowSidebar(!showSidebar)}
+        >
+          <Menu className="w-6 h-6" />
+        </Button>
+      ) : null}
+      
+      <div className={cn(
+        "md:relative fixed inset-y-0 left-0 z-40 transition-transform duration-300 ease-in-out transform",
+        isMobile && !showSidebar && "-translate-x-full",
+        isMobile && "w-64"
+      )}>
+        <Sidebar />
+      </div>
+      
       <main className="flex-1 p-4 md:p-8 overflow-auto">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
@@ -71,7 +91,7 @@ const Index = () => {
           ) : (
             <div>
               <h2 className="text-xl font-bold text-white mb-4">Your Videos</h2>
-              <VideoList videos={videos} setVideos={setVideos} />
+              <VideoList videos={videos} setVideos={setVideos} showOnlyUserVideos={true} />
             </div>
           )}
         </div>
