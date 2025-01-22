@@ -33,6 +33,11 @@ self.addEventListener('fetch', (event) => {
             const responseToCache = response.clone();
             caches.open(CACHE_NAME)
               .then((cache) => {
+                if (event.request.url.includes('/api/') || 
+                    event.request.url.includes('/storage/') ||
+                    event.request.url.includes('/rest/')) {
+                  return;
+                }
                 cache.put(event.request, responseToCache);
               });
             return response;
@@ -55,4 +60,29 @@ self.addEventListener('activate', (event) => {
       );
     })
   );
+});
+
+// Add support for downloading videos
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'DOWNLOAD_VIDEO') {
+    const { videoUrl, fileName } = event.data;
+    
+    fetch(videoUrl)
+      .then(response => response.blob())
+      .then(blob => {
+        const objectUrl = URL.createObjectURL(blob);
+        self.clients.matchAll().then(clients => {
+          clients.forEach(client => {
+            client.postMessage({
+              type: 'VIDEO_DOWNLOADED',
+              url: objectUrl,
+              fileName: fileName
+            });
+          });
+        });
+      })
+      .catch(error => {
+        console.error('Download failed:', error);
+      });
+  }
 });

@@ -1,6 +1,7 @@
 import { Sidebar } from "@/components/Sidebar";
 import { VideoList } from "@/components/VideoList";
 import { VideoUploadDialog } from "@/components/upload/VideoUploadDialog";
+import { ProfileManager } from "@/components/profile/ProfileManager";
 import { useState, useEffect } from "react";
 import { AuthComponent } from "@/components/auth/Auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +14,7 @@ const Index = () => {
   const [videos, setVideos] = useState<Video[]>([]);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showProfile, setShowProfile] = useState(false);
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -51,13 +53,26 @@ const Index = () => {
             <h1 className="text-2xl md:text-3xl font-bold text-white text-center md:text-left">
               Dashboard
             </h1>
-            <VideoUploadDialog onUploadComplete={(video) => setVideos([...videos, video])} />
+            <div className="flex gap-4">
+              <Button
+                variant="outline"
+                onClick={() => setShowProfile(!showProfile)}
+                className="whitespace-nowrap"
+              >
+                {showProfile ? "Hide Profile" : "Edit Profile"}
+              </Button>
+              <VideoUploadDialog onUploadComplete={(video) => setVideos([...videos, video])} />
+            </div>
           </div>
 
-          <div>
-            <h2 className="text-xl font-bold text-white mb-4">Your Videos</h2>
-            <VideoList videos={videos} setVideos={setVideos} />
-          </div>
+          {showProfile ? (
+            <ProfileManager />
+          ) : (
+            <div>
+              <h2 className="text-xl font-bold text-white mb-4">Your Videos</h2>
+              <VideoList videos={videos} setVideos={setVideos} />
+            </div>
+          )}
         </div>
       </main>
     </div>
