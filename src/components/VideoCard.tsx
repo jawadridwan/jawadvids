@@ -10,6 +10,7 @@ import { Button } from "./ui/button";
 import { Maximize2, Minimize2 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
+import { useOffline } from "@/hooks/use-offline";
 
 interface VideoCardProps {
   id: string;
@@ -43,6 +44,7 @@ export const VideoCard = ({
   const [isPlaying, setIsPlaying] = useState(false);
   const [videoSize, setVideoSize] = useState<'default' | 'medium' | 'fullscreen'>('default');
   const isMobile = useIsMobile();
+  const isOffline = useOffline();
 
   const { data: engagementMetrics } = useQuery({
     queryKey: ['engagement-metrics', id],
@@ -71,11 +73,13 @@ export const VideoCard = ({
         return null;
       }
     },
-    enabled: !!id
+    enabled: !!id && !isOffline
   });
 
   const handleTimeUpdate = (currentTime: number, duration: number) => {
-    console.log('Video progress:', Math.round((currentTime / duration) * 100), '%');
+    if (!isOffline) {
+      console.log('Video progress:', Math.round((currentTime / duration) * 100), '%');
+    }
   };
 
   const toggleVideoSize = () => {
@@ -163,7 +167,7 @@ export const VideoCard = ({
             sharesCount={engagementMetrics?.shares_count}
           />
         </div>
-        <CommentSection videoId={id} />
+        {!isOffline && <CommentSection videoId={id} />}
       </div>
     </div>
   );
