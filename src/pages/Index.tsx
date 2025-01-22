@@ -6,7 +6,6 @@ import { useState, useEffect } from "react";
 import { AuthComponent } from "@/components/auth/Auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
-import { toast } from "sonner";
 import { Video } from "@/types/video";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
