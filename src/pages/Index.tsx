@@ -11,6 +11,7 @@ import { Video } from "@/types/video";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const Index = () => {
   const [videos, setVideos] = useState<Video[]>([]);
