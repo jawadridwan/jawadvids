@@ -35,22 +35,27 @@ export const CommentForm = ({ videoId, onCommentAdded, parentId }: CommentFormPr
     setIsSubmitting(true);
 
     try {
-      // First check if a similar comment exists
+      // First fetch recent comments by the user on this video
       const { data: existingComments } = await supabase
         .from('comments')
-        .select('id')
+        .select('content, created_at')
         .eq('video_id', videoId)
         .eq('user_id', session.user.id)
-        .eq('content', comment.trim())
         .is('deleted_at', null)
-        .maybeSingle();
+        .order('created_at', { ascending: false })
+        .limit(1);
 
-      if (existingComments) {
-        toast.error("You've already posted this exact comment");
-        return;
+      // Check if the most recent comment is identical and was posted within the last minute
+      if (existingComments && existingComments.length > 0) {
+        const lastComment = existingComments[0];
+        const timeSinceLastComment = Date.now() - new Date(lastComment.created_at).getTime();
+        if (lastComment.content === comment.trim() && timeSinceLastComment < 60000) {
+          toast.error("Please wait a moment before posting the same comment again");
+          return;
+        }
       }
 
-      // If no duplicate exists, insert the new comment
+      // If no recent duplicate exists, insert the new comment
       const { error } = await supabase
         .from('comments')
         .insert({
