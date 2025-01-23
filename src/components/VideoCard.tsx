@@ -26,7 +26,7 @@ interface VideoCardProps {
   user_id: string;
 }
 
-export const VideoCard = ({ 
+const VideoCard = ({ 
   id,
   title, 
   views, 
@@ -112,7 +112,6 @@ export const VideoCard = ({
                 videoSize === 'medium' && "w-[854px] h-[480px]",
                 videoSize === 'fullscreen' && "fixed inset-0 z-50 h-screen"
               )}
-              allowDownload={true}
             />
             <Button
               variant="ghost"
@@ -170,3 +169,5 @@ export const VideoCard = ({
     </div>
   );
 };
+
+export { VideoCard };
