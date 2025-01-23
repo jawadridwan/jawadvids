@@ -112,6 +112,7 @@ const VideoCard = ({
                 videoSize === 'medium' && "w-[854px] h-[480px]",
                 videoSize === 'fullscreen' && "fixed inset-0 z-50 h-screen"
               )}
+              allowDownload={true}
             />
             <Button
               variant="ghost"
@@ -170,4 +171,5 @@ const VideoCard = ({
   );
 };
 
+// Add named export
 export { VideoCard };
