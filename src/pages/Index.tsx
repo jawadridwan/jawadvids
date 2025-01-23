@@ -9,6 +9,8 @@ import { Session } from "@supabase/supabase-js";
 import { Video } from "@/types/video";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+import { Menu } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const Index = () => {
   const [videos, setVideos] = useState<Video[]>([]);
@@ -33,6 +35,10 @@ const Index = () => {
     return () => subscription.unsubscribe();
   }, []);
 
+  const toggleSidebar = () => {
+    setShowSidebar(!showSidebar);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-youtube-darker flex items-center justify-center">
@@ -47,6 +53,17 @@ const Index = () => {
 
   return (
     <div className="flex flex-col md:flex-row bg-youtube-darker min-h-screen touch-pan-y">
+      {isMobile && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="fixed top-4 left-4 z-50 md:hidden"
+          onClick={toggleSidebar}
+        >
+          <Menu className="h-6 w-6 text-white" />
+        </Button>
+      )}
+      
       <div className={cn(
         "md:relative fixed inset-y-0 left-0 z-40 transition-transform duration-300 ease-in-out transform",
         isMobile && !showSidebar && "-translate-x-full",
@@ -58,9 +75,6 @@ const Index = () => {
       <main className="flex-1 p-4 md:p-8 overflow-auto">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
-            <h1 className="text-2xl md:text-3xl font-bold text-white text-center md:text-left">
-              Dashboard
-            </h1>
             <div className="flex gap-4">
               <button
                 onClick={() => setShowProfile(!showProfile)}
