@@ -26,7 +26,7 @@ interface VideoCardProps {
   user_id: string;
 }
 
-const VideoCard = ({ 
+export const VideoCard = ({ 
   id,
   title, 
   views, 
@@ -170,6 +170,3 @@ const VideoCard = ({
     </div>
   );
 };
-
-// Add named export
-export { VideoCard };
