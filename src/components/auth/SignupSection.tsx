@@ -11,11 +11,24 @@ export const SignupSection = ({ onSignInClick }: SignupSectionProps) => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [agreed, setAgreed] = useState(false);
+  const [signupCooldown, setSignupCooldown] = useState(false);
+
+  const startSignupCooldown = () => {
+    setSignupCooldown(true);
+    setTimeout(() => {
+      setSignupCooldown(false);
+    }, 60000); // 60 seconds cooldown
+  };
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!agreed) {
       toast.error("Please agree to the terms & conditions");
+      return;
+    }
+
+    if (signupCooldown) {
+      toast.error("Please wait 60 seconds before trying to sign up again");
       return;
     }
     
@@ -26,8 +39,17 @@ export const SignupSection = ({ onSignInClick }: SignupSectionProps) => {
         password,
       });
 
-      if (error) throw error;
-      toast.success("Check your email to confirm your account!");
+      if (error) {
+        if (error.message.includes("rate_limit")) {
+          startSignupCooldown();
+          toast.error("Please wait 60 seconds before trying to sign up again");
+        } else {
+          toast.error(error.message);
+        }
+      } else {
+        toast.success("Check your email to confirm your account!");
+        startSignupCooldown(); // Prevent immediate retry
+      }
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -77,10 +99,10 @@ export const SignupSection = ({ onSignInClick }: SignupSectionProps) => {
 
       <button
         type="submit"
-        disabled={loading}
+        disabled={loading || signupCooldown}
         className="w-full h-10 bg-[#0ef] shadow-[0_0_10px_#0ef] text-black font-medium rounded-full hover:opacity-90 transition-opacity disabled:opacity-50"
       >
-        {loading ? "Loading..." : "Sign Up"}
+        {loading ? "Loading..." : signupCooldown ? "Please wait..." : "Sign Up"}
       </button>
 
       <div className="mt-4 text-center">
