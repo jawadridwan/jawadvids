@@ -9,8 +9,6 @@ import { useAutoScroll } from './hooks/useAutoScroll';
 import { usePictureInPicture } from './hooks/usePictureInPicture';
 import { useClosedCaptions } from './hooks/useClosedCaptions';
 import { toast } from 'sonner';
-import { Download } from 'lucide-react';
-import { Button } from '../ui/button';
 
 interface VideoPlayerProps {
   url: string;
@@ -20,7 +18,6 @@ interface VideoPlayerProps {
   onPlayStateChange?: (isPlaying: boolean) => void;
   nextVideoId?: string;
   captions?: { src: string; label: string; language: string }[];
-  allowDownload?: boolean;
 }
 
 export const VideoPlayer = ({ 
@@ -30,8 +27,7 @@ export const VideoPlayer = ({
   className,
   onPlayStateChange,
   nextVideoId,
-  captions,
-  allowDownload = false
+  captions
 }: VideoPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -62,25 +58,6 @@ export const VideoPlayer = ({
     togglePiP,
     toggleCaptions
   });
-
-  const handleDownload = async () => {
-    try {
-      const response = await fetch(url);
-      const blob = await response.blob();
-      const downloadUrl = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = downloadUrl;
-      a.download = 'video.mp4';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(downloadUrl);
-      toast.success('Download started');
-    } catch (error) {
-      console.error('Download error:', error);
-      toast.error('Failed to download video');
-    }
-  };
 
   useEffect(() => {
     const video = videoRef.current;
@@ -195,17 +172,6 @@ export const VideoPlayer = ({
             videoRef={videoRef}
             viewMode={viewMode}
           />
-
-          {allowDownload && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute top-2 right-2 text-white bg-black/50 hover:bg-black/70"
-              onClick={handleDownload}
-            >
-              <Download className="w-4 h-4" />
-            </Button>
-          )}
         </>
       )}
     </div>
