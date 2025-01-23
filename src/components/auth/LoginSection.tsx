@@ -21,8 +21,25 @@ export const LoginSection = ({ onSignUpClick }: LoginSectionProps) => {
         password,
       });
 
-      if (error) throw error;
-      toast.success("Successfully logged in!");
+      if (error) {
+        if (error.message.includes("Email not confirmed")) {
+          // Handle email not confirmed case
+          const { error: resendError } = await supabase.auth.resend({
+            type: 'signup',
+            email,
+          });
+          
+          if (resendError) {
+            toast.error("Failed to resend confirmation email. Please try again later.");
+          } else {
+            toast.info("Please check your email to confirm your account. A new confirmation email has been sent.");
+          }
+        } else {
+          throw error;
+        }
+      } else {
+        toast.success("Successfully logged in!");
+      }
     } catch (error: any) {
       toast.error(error.message);
     } finally {
