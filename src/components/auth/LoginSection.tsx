@@ -34,11 +34,12 @@ export const LoginSection = ({ onSignUpClick }: LoginSectionProps) => {
       if (resendError) {
         if (resendError.message.includes("rate_limit")) {
           toast.error("Please wait 30 seconds before requesting another confirmation email.");
+          startResendCooldown();
         } else {
           toast.error(resendError.message);
         }
       } else {
-        toast.success("Confirmation email sent! Please check your inbox.");
+        toast.success("Confirmation email sent! Please check your inbox and spam folder.");
         startResendCooldown();
       }
     } catch (error: any) {
@@ -63,6 +64,7 @@ export const LoginSection = ({ onSignUpClick }: LoginSectionProps) => {
               label: "Resend confirmation",
               onClick: handleResendConfirmation,
             },
+            duration: 10000, // Show for 10 seconds to give user time to click
           });
         } else {
           toast.error(error.message);
