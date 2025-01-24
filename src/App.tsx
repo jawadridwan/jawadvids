@@ -7,13 +7,12 @@ import Content from "./pages/Content";
 import Playlists from "./pages/Playlists";
 import Engagement from "./pages/Engagement";
 import { ProfileView } from "./components/profile/ProfileView";
-import "./App.css";
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 5, // 5 minutes
-      retry: 1,
+      refetchOnWindowFocus: false,
     },
   },
 });
