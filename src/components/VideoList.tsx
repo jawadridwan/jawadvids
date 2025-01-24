@@ -15,7 +15,7 @@ interface VideoListProps {
 export const VideoList = ({ videos: initialVideos, setVideos, showOnlyUserVideos = false }: VideoListProps) => {
   const session = useSession();
 
-  const { data: videos = initialVideos, isError } = useQuery({
+  const { data: videos = initialVideos, isError, refetch } = useQuery({
     queryKey: ['videos', showOnlyUserVideos],
     queryFn: async () => {
       try {
@@ -26,6 +26,12 @@ export const VideoList = ({ videos: initialVideos, setVideos, showOnlyUserVideos
             *,
             reactions (
               type
+            ),
+            performance_metrics(
+              views_count,
+              likes_count,
+              comments_count,
+              shares_count
             )
           `);
 
@@ -49,7 +55,7 @@ export const VideoList = ({ videos: initialVideos, setVideos, showOnlyUserVideos
           id: video.id,
           title: video.title,
           description: video.description,
-          views: '0',
+          views: video.performance_metrics?.[0]?.views_count?.toString() || '0',
           status: video.status || 'ready' as const,
           uploadDate: video.created_at,
           thumbnail: video.thumbnail_url || '/placeholder.svg',
@@ -60,7 +66,13 @@ export const VideoList = ({ videos: initialVideos, setVideos, showOnlyUserVideos
           thumbnail_url: video.thumbnail_url,
           url: video.url,
           likes: video.reactions?.filter((r: any) => r.type === 'like').length || 0,
-          dislikes: video.reactions?.filter((r: any) => r.type === 'dislike').length || 0
+          dislikes: video.reactions?.filter((r: any) => r.type === 'dislike').length || 0,
+          engagement: {
+            views: video.performance_metrics?.[0]?.views_count || 0,
+            likes: video.performance_metrics?.[0]?.likes_count || 0,
+            comments: video.performance_metrics?.[0]?.comments_count || 0,
+            shares: video.performance_metrics?.[0]?.shares_count || 0
+          }
         }));
       } catch (error) {
         console.error('Error in video query:', error);
@@ -104,7 +116,7 @@ export const VideoList = ({ videos: initialVideos, setVideos, showOnlyUserVideos
             dislikes={video.dislikes}
             user_id={video.user_id}
           />
-          <VideoActions video={video} />
+          <VideoActions video={video} onDelete={refetch} />
         </div>
       ))}
     </div>
