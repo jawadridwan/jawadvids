@@ -4,9 +4,9 @@ import { VideoProgress } from './controls/VideoProgress';
 import { VideoControls } from './controls/VideoControls';
 import { useFullscreen } from './hooks/useFullscreen';
 import { useKeyboardControls } from './hooks/useKeyboardControls';
-import { useVideoPreferences } from './hooks/useVideoPreferences';
 import { useAutoScroll } from './hooks/useAutoScroll';
 import { toast } from 'sonner';
+import { useVideoPlayback } from '@/contexts/VideoPlaybackContext';
 
 interface VideoPlayerProps {
   url: string;
@@ -35,15 +35,15 @@ export const VideoPlayer = ({
   const [showControls, setShowControls] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  const { preferences, updatePreference } = useVideoPreferences();
   const { isFullscreen, toggleFullscreen } = useFullscreen(containerRef);
+  const { registerVideo, unregisterVideo, handlePlay } = useVideoPlayback();
 
   useAutoScroll({
     videoRef,
     nextVideoId,
-    isEnabled: preferences.autoScroll,
-    scrollThreshold: preferences.scrollThreshold,
-    scrollSpeed: preferences.scrollSpeed
+    isEnabled: true,
+    scrollThreshold: 0.8,
+    scrollSpeed: 'smooth'
   });
 
   useEffect(() => {
@@ -86,6 +86,7 @@ export const VideoPlayer = ({
       });
       setIsPlaying(true);
       onPlayStateChange?.(true);
+      handlePlay(nextVideoId || '');
     } else {
       video.pause();
       setIsPlaying(false);
@@ -158,7 +159,6 @@ export const VideoPlayer = ({
           <VideoControls
             isPlaying={isPlaying}
             isFullscreen={isFullscreen}
-            preferences={preferences}
             showControls={showControls}
             onPlayPause={togglePlay}
             onToggleFullscreen={toggleFullscreen}
@@ -167,7 +167,6 @@ export const VideoPlayer = ({
                 toggleFullscreen();
               }
             }}
-            onPreferenceChange={updatePreference}
             videoRef={videoRef}
             viewMode={size}
           />
