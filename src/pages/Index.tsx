@@ -2,48 +2,16 @@ import { Sidebar } from "@/components/Sidebar";
 import { VideoList } from "@/components/VideoList";
 import { VideoUploadDialog } from "@/components/upload/VideoUploadDialog";
 import { ProfileManager } from "@/components/profile/ProfileManager";
-import { useState, useEffect } from "react";
-import { AuthComponent } from "@/components/auth/Auth";
-import { supabase } from "@/integrations/supabase/client";
-import { Session } from "@supabase/supabase-js";
+import { useState } from "react";
 import { Video } from "@/types/video";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
 const Index = () => {
   const [videos, setVideos] = useState<Video[]>([]);
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
   const [showProfile, setShowProfile] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const isMobile = useIsMobile();
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setLoading(false);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-youtube-darker flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-youtube-red"></div>
-      </div>
-    );
-  }
-
-  if (!session) {
-    return <AuthComponent />;
-  }
 
   return (
     <div className="flex flex-col md:flex-row bg-youtube-darker min-h-screen touch-pan-y">
