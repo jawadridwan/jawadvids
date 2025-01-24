@@ -2,42 +2,27 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 import { PlaybackControls } from './PlaybackControls';
 import { ViewModeControls } from './ViewModeControls';
-import { VideoPreferences } from '../hooks/useVideoPreferences';
 
 interface VideoControlsProps {
   isPlaying: boolean;
   isFullscreen: boolean;
-  isPiPActive?: boolean;
-  preferences?: VideoPreferences;
   showControls: boolean;
   onPlayPause: () => void;
   onToggleFullscreen: () => void;
-  onTogglePiP?: () => void;
-  onToggleCaptions?: () => void;
   onViewModeChange: (mode: 'default' | 'medium' | 'fullscreen') => void;
-  onPreferenceChange?: <K extends keyof VideoPreferences>(key: K, value: VideoPreferences[K]) => void;
   videoRef: React.RefObject<HTMLVideoElement>;
   viewMode: 'default' | 'medium' | 'fullscreen';
-  onClose?: () => void;
-  onNextVideo?: () => void;
-  onPreviousVideo?: () => void;
 }
 
 export const VideoControls = ({
   isPlaying,
   isFullscreen,
-  isPiPActive,
   showControls,
   onPlayPause,
   onToggleFullscreen,
-  onTogglePiP,
-  onToggleCaptions,
   onViewModeChange,
   videoRef,
   viewMode,
-  onClose,
-  onNextVideo,
-  onPreviousVideo
 }: VideoControlsProps) => {
   return (
     <div
@@ -51,17 +36,14 @@ export const VideoControls = ({
         <PlaybackControls
           isPlaying={isPlaying}
           onPlayPause={onPlayPause}
-          onPreviousVideo={onPreviousVideo}
-          onNextVideo={onNextVideo}
           videoRef={videoRef}
         />
 
-        <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex items-center justify-between gap-4">
           <ViewModeControls
             isFullscreen={isFullscreen}
             onToggleFullscreen={onToggleFullscreen}
             onViewModeChange={onViewModeChange}
-            onClose={onClose}
           />
         </div>
       </div>

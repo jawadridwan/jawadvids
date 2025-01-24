@@ -21,7 +21,7 @@ export const VideoPlaybackProvider = ({ children }: { children: React.ReactNode 
 
   const handlePlay = (playingId: string) => {
     videoRegistry.current.forEach((video, id) => {
-      if (id !== playingId && !video.paused) {
+      if (id !== playingId) {
         video.pause();
       }
     });
