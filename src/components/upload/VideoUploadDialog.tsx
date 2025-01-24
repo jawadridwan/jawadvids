@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { UploadForm } from "./UploadForm";
@@ -9,7 +9,7 @@ interface VideoUploadDialogProps {
   onUploadComplete: (videoData: any) => void;
 }
 
-export const VideoUploadDialog = ({ onUploadComplete }: VideoUploadDialogProps) => {
+export const VideoUploadDialog: React.FC<VideoUploadDialogProps> = ({ onUploadComplete }) => {
   const [open, setOpen] = useState(false);
 
   return (
