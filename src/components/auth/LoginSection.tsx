@@ -10,42 +10,6 @@ export const LoginSection = ({ onSignUpClick }: LoginSectionProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [resendCooldown, setResendCooldown] = useState(false);
-
-  const startResendCooldown = () => {
-    setResendCooldown(true);
-    setTimeout(() => {
-      setResendCooldown(false);
-    }, 31000); // 31 seconds to be safe
-  };
-
-  const handleResendConfirmation = async () => {
-    if (resendCooldown) {
-      toast.error("Please wait 30 seconds before requesting another confirmation email.");
-      return;
-    }
-
-    try {
-      const { error: resendError } = await supabase.auth.resend({
-        type: 'signup',
-        email,
-      });
-      
-      if (resendError) {
-        if (resendError.message.includes("rate_limit")) {
-          toast.error("Please wait 30 seconds before requesting another confirmation email.");
-          startResendCooldown();
-        } else {
-          toast.error(resendError.message);
-        }
-      } else {
-        toast.success("Confirmation email sent! Please check your inbox and spam folder.");
-        startResendCooldown();
-      }
-    } catch (error: any) {
-      toast.error("Failed to resend confirmation email. Please try again later.");
-    }
-  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,21 +21,8 @@ export const LoginSection = ({ onSignUpClick }: LoginSectionProps) => {
         password,
       });
 
-      if (error) {
-        if (error.message.includes("Email not confirmed")) {
-          toast.error("Please confirm your email address before logging in.", {
-            action: {
-              label: "Resend confirmation",
-              onClick: handleResendConfirmation,
-            },
-            duration: 10000, // Show for 10 seconds to give user time to click
-          });
-        } else {
-          toast.error(error.message);
-        }
-      } else {
-        toast.success("Successfully logged in!");
-      }
+      if (error) throw error;
+      toast.success("Successfully logged in!");
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -114,7 +65,7 @@ export const LoginSection = ({ onSignUpClick }: LoginSectionProps) => {
 
       <button
         type="submit"
-        disabled={loading || resendCooldown}
+        disabled={loading}
         className="w-full h-10 bg-[#0ef] shadow-[0_0_10px_#0ef] text-black font-medium rounded-full hover:opacity-90 transition-opacity disabled:opacity-50"
       >
         {loading ? "Loading..." : "Login"}
