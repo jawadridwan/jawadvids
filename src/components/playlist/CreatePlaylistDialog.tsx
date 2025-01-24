@@ -24,7 +24,6 @@ export const CreatePlaylistDialog: React.FC = () => {
           title,
           description,
           visibility: 'private',
-          // Using a temporary user ID since we removed auth
           user_id: '00000000-0000-0000-0000-000000000000'
         })
         .select()

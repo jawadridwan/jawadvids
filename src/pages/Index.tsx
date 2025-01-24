@@ -1,7 +1,7 @@
+import React from 'react';
 import { Sidebar } from "@/components/Sidebar";
 import { VideoList } from "@/components/VideoList";
 import { VideoUploadDialog } from "@/components/upload/VideoUploadDialog";
-import { ProfileManager } from "@/components/profile/ProfileManager";
 import { useState } from "react";
 import { Video } from "@/types/video";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -9,7 +9,6 @@ import { cn } from "@/lib/utils";
 
 const Index = () => {
   const [videos, setVideos] = useState<Video[]>([]);
-  const [showProfile, setShowProfile] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const isMobile = useIsMobile();
 
@@ -30,24 +29,14 @@ const Index = () => {
               Dashboard
             </h1>
             <div className="flex gap-4">
-              <button
-                onClick={() => setShowProfile(!showProfile)}
-                className="px-4 py-2 rounded-lg bg-youtube-dark text-white hover:bg-opacity-80 transition-colors"
-              >
-                {showProfile ? "Hide Profile" : "Edit Profile"}
-              </button>
               <VideoUploadDialog onUploadComplete={(video) => setVideos([...videos, video])} />
             </div>
           </div>
 
-          {showProfile ? (
-            <ProfileManager />
-          ) : (
-            <div>
-              <h2 className="text-xl font-bold text-white mb-4">Your Videos</h2>
-              <VideoList videos={videos} setVideos={setVideos} showOnlyUserVideos={true} />
-            </div>
-          )}
+          <div>
+            <h2 className="text-xl font-bold text-white mb-4">Your Videos</h2>
+            <VideoList videos={videos} setVideos={setVideos} showOnlyUserVideos={true} />
+          </div>
         </div>
       </main>
     </div>
