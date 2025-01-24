@@ -8,6 +8,7 @@ import { useVideoPreferences } from './hooks/useVideoPreferences';
 import { useAutoScroll } from './hooks/useAutoScroll';
 import { usePictureInPicture } from './hooks/usePictureInPicture';
 import { useClosedCaptions } from './hooks/useClosedCaptions';
+import { useVideoPlayback } from '@/contexts/VideoPlaybackContext';
 import { toast } from 'sonner';
 
 interface EnhancedVideoPlayerProps {
@@ -18,6 +19,7 @@ interface EnhancedVideoPlayerProps {
   onPlayStateChange?: (isPlaying: boolean) => void;
   nextVideoId?: string;
   captions?: { src: string; label: string; language: string }[];
+  videoId: string;
 }
 
 export const EnhancedVideoPlayer = ({
@@ -27,7 +29,8 @@ export const EnhancedVideoPlayer = ({
   className,
   onPlayStateChange,
   nextVideoId,
-  captions
+  captions,
+  videoId
 }: EnhancedVideoPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -40,6 +43,7 @@ export const EnhancedVideoPlayer = ({
   const { isFullscreen, toggleFullscreen } = useFullscreen(containerRef);
   const { isPiPActive, togglePiP } = usePictureInPicture(videoRef);
   const { activeCaptions, toggleCaptions } = useClosedCaptions(videoRef, captions);
+  const { registerVideo, unregisterVideo, handlePlay } = useVideoPlayback();
 
   useAutoScroll({
     videoRef,
@@ -66,9 +70,30 @@ export const EnhancedVideoPlayer = ({
       toast.error('Failed to load video');
     };
 
+    const handleVideoPlay = () => {
+      setIsPlaying(true);
+      onPlayStateChange?.(true);
+      handlePlay(videoId);
+    };
+
+    const handleVideoPause = () => {
+      setIsPlaying(false);
+      onPlayStateChange?.(false);
+    };
+
     video.addEventListener('error', handleError);
-    return () => video.removeEventListener('error', handleError);
-  }, []);
+    video.addEventListener('play', handleVideoPlay);
+    video.addEventListener('pause', handleVideoPause);
+
+    registerVideo(videoId, video);
+
+    return () => {
+      video.removeEventListener('error', handleError);
+      video.removeEventListener('play', handleVideoPlay);
+      video.removeEventListener('pause', handleVideoPause);
+      unregisterVideo(videoId);
+    };
+  }, [videoId, onPlayStateChange, registerVideo, unregisterVideo, handlePlay]);
 
   const togglePlay = () => {
     const video = videoRef.current;
@@ -79,12 +104,8 @@ export const EnhancedVideoPlayer = ({
         setError('Failed to play video');
         toast.error('Failed to play video');
       });
-      setIsPlaying(true);
-      onPlayStateChange?.(true);
     } else {
       video.pause();
-      setIsPlaying(false);
-      onPlayStateChange?.(false);
     }
   };
 
