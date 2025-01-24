@@ -39,7 +39,7 @@ export const Sidebar = () => {
     <div className="flex flex-col h-full">
       <div className="flex items-center gap-2 mb-8">
         <div className="w-8 h-8 bg-youtube-red rounded-full" />
-        <h1 className="text-xl font-bold text-white">JR Dashboard</h1>
+        <h1 className="text-xl font-bold text-white">Pure Bloom</h1>
       </div>
       
       <nav className="flex flex-col h-[calc(100%-6rem)] justify-between">

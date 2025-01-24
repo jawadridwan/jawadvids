@@ -4,7 +4,6 @@ import { VideoProgress } from './controls/VideoProgress';
 import { VideoControls } from './controls/VideoControls';
 import { useFullscreen } from './hooks/useFullscreen';
 import { useKeyboardControls } from './hooks/useKeyboardControls';
-import { useVideoPreferences } from './hooks/useVideoPreferences';
 import { useAutoScroll } from './hooks/useAutoScroll';
 import { usePictureInPicture } from './hooks/usePictureInPicture';
 import { useClosedCaptions } from './hooks/useClosedCaptions';
@@ -39,7 +38,6 @@ export const EnhancedVideoPlayer = ({
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'default' | 'medium' | 'fullscreen'>('default');
 
-  const { preferences, updatePreference } = useVideoPreferences();
   const { isFullscreen, toggleFullscreen } = useFullscreen(containerRef);
   const { isPiPActive, togglePiP } = usePictureInPicture(videoRef);
   const { activeCaptions, toggleCaptions } = useClosedCaptions(videoRef, captions);
@@ -48,9 +46,9 @@ export const EnhancedVideoPlayer = ({
   useAutoScroll({
     videoRef,
     nextVideoId,
-    isEnabled: preferences.autoScroll,
-    scrollThreshold: preferences.scrollThreshold,
-    scrollSpeed: preferences.scrollSpeed
+    isEnabled: true,
+    scrollThreshold: 0.8,
+    scrollSpeed: 1000
   });
 
   useKeyboardControls({
@@ -116,17 +114,15 @@ export const EnhancedVideoPlayer = ({
     }
   };
 
-  const containerClasses = cn(
-    "relative group bg-black rounded-lg overflow-hidden",
-    viewMode === 'medium' && "w-[854px] h-[480px]",
-    viewMode === 'default' && "w-full aspect-video",
-    className
-  );
-
   return (
     <div
       ref={containerRef}
-      className={containerClasses}
+      className={cn(
+        "relative group bg-black rounded-lg overflow-hidden",
+        viewMode === 'medium' && "w-[854px] h-[480px]",
+        viewMode === 'default' && "w-full aspect-video",
+        className
+      )}
       onMouseEnter={() => setShowControls(true)}
       onMouseLeave={() => !isPlaying && setShowControls(false)}
       onTouchStart={() => setShowControls(true)}
@@ -164,14 +160,12 @@ export const EnhancedVideoPlayer = ({
             isPlaying={isPlaying}
             isFullscreen={isFullscreen}
             isPiPActive={isPiPActive}
-            preferences={preferences}
             showControls={showControls}
             onPlayPause={togglePlay}
             onToggleFullscreen={toggleFullscreen}
             onTogglePiP={togglePiP}
             onToggleCaptions={toggleCaptions}
             onViewModeChange={handleViewModeChange}
-            onPreferenceChange={updatePreference}
             videoRef={videoRef}
             viewMode={viewMode}
           />

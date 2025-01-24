@@ -2,7 +2,6 @@ import { Badge } from "./ui/badge";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { EnhancedVideoPlayer } from "./video/EnhancedVideoPlayer";
-import { CommentSection } from "./comments/CommentSection";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { VideoCardActions } from "./video/VideoCardActions";
@@ -163,7 +162,6 @@ export const VideoCard = ({
             sharesCount={engagementMetrics?.shares_count}
           />
         </div>
-        <CommentSection videoId={id} />
       </div>
     </div>
   );
