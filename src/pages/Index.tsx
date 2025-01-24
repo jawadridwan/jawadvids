@@ -9,6 +9,7 @@ import { Session } from "@supabase/supabase-js";
 import { Video } from "@/types/video";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 const Index = () => {
   const [videos, setVideos] = useState<Video[]>([]);
@@ -19,14 +20,19 @@ const Index = () => {
   const isMobile = useIsMobile();
 
   useEffect(() => {
+    // Initial session check
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);
     });
 
+    // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (_event === 'SIGNED_OUT') {
+        toast.error('You have been signed out');
+      }
       setSession(session);
     });
 
