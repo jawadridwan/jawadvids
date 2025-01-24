@@ -1,7 +1,5 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { VideoVolume } from './VideoVolume';
-import { VideoPlaybackSpeed } from './VideoPlaybackSpeed';
 import { PlaybackControls } from './PlaybackControls';
 import { ViewModeControls } from './ViewModeControls';
 import { VideoPreferences } from '../hooks/useVideoPreferences';
@@ -10,14 +8,14 @@ interface VideoControlsProps {
   isPlaying: boolean;
   isFullscreen: boolean;
   isPiPActive?: boolean;
-  preferences: VideoPreferences;
+  preferences?: VideoPreferences;
   showControls: boolean;
   onPlayPause: () => void;
   onToggleFullscreen: () => void;
   onTogglePiP?: () => void;
   onToggleCaptions?: () => void;
   onViewModeChange: (mode: 'default' | 'medium' | 'fullscreen') => void;
-  onPreferenceChange: <K extends keyof VideoPreferences>(key: K, value: VideoPreferences[K]) => void;
+  onPreferenceChange?: <K extends keyof VideoPreferences>(key: K, value: VideoPreferences[K]) => void;
   videoRef: React.RefObject<HTMLVideoElement>;
   viewMode: 'default' | 'medium' | 'fullscreen';
   onClose?: () => void;
@@ -29,14 +27,12 @@ export const VideoControls = ({
   isPlaying,
   isFullscreen,
   isPiPActive,
-  preferences,
   showControls,
   onPlayPause,
   onToggleFullscreen,
   onTogglePiP,
   onToggleCaptions,
   onViewModeChange,
-  onPreferenceChange,
   videoRef,
   viewMode,
   onClose,
@@ -61,19 +57,6 @@ export const VideoControls = ({
         />
 
         <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-2">
-            <VideoVolume
-              volume={preferences.volume}
-              onVolumeChange={(value) => onPreferenceChange('volume', value[0])}
-              onToggleMute={() => onPreferenceChange('volume', preferences.volume === 0 ? 1 : 0)}
-            />
-
-            <VideoPlaybackSpeed
-              speed={preferences.playbackSpeed}
-              onSpeedChange={(value) => onPreferenceChange('playbackSpeed', value)}
-            />
-          </div>
-
           <ViewModeControls
             isFullscreen={isFullscreen}
             onToggleFullscreen={onToggleFullscreen}

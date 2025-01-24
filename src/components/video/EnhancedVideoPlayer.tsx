@@ -1,6 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import { VideoProgress } from './controls/VideoProgress';
 import { VideoControls } from './controls/VideoControls';
 import { useFullscreen } from './hooks/useFullscreen';
 import { useKeyboardControls } from './hooks/useKeyboardControls';
