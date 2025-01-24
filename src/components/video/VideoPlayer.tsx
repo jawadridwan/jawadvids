@@ -6,11 +6,7 @@ import { useFullscreen } from './hooks/useFullscreen';
 import { useKeyboardControls } from './hooks/useKeyboardControls';
 import { useVideoPreferences } from './hooks/useVideoPreferences';
 import { useAutoScroll } from './hooks/useAutoScroll';
-import { usePictureInPicture } from './hooks/usePictureInPicture';
-import { useClosedCaptions } from './hooks/useClosedCaptions';
 import { toast } from 'sonner';
-import { Download } from 'lucide-react';
-import { Button } from '../ui/button';
 
 interface VideoPlayerProps {
   url: string;
@@ -19,8 +15,7 @@ interface VideoPlayerProps {
   className?: string;
   onPlayStateChange?: (isPlaying: boolean) => void;
   nextVideoId?: string;
-  captions?: { src: string; label: string; language: string }[];
-  allowDownload?: boolean;
+  size?: 'default' | 'medium' | 'fullscreen';
 }
 
 export const VideoPlayer = ({ 
@@ -30,8 +25,7 @@ export const VideoPlayer = ({
   className,
   onPlayStateChange,
   nextVideoId,
-  captions,
-  allowDownload = false
+  size = 'default'
 }: VideoPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -40,12 +34,9 @@ export const VideoPlayer = ({
   const [duration, setDuration] = useState(0);
   const [showControls, setShowControls] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'default' | 'medium' | 'fullscreen'>('default');
   
   const { preferences, updatePreference } = useVideoPreferences();
   const { isFullscreen, toggleFullscreen } = useFullscreen(containerRef);
-  const { isPiPActive, togglePiP } = usePictureInPicture(videoRef);
-  const { activeCaptions, toggleCaptions } = useClosedCaptions(videoRef, captions);
 
   useAutoScroll({
     videoRef,
@@ -54,33 +45,6 @@ export const VideoPlayer = ({
     scrollThreshold: preferences.scrollThreshold,
     scrollSpeed: preferences.scrollSpeed
   });
-
-  useKeyboardControls({
-    videoRef,
-    togglePlay: () => togglePlay(),
-    toggleFullscreen,
-    togglePiP,
-    toggleCaptions
-  });
-
-  const handleDownload = async () => {
-    try {
-      const response = await fetch(url);
-      const blob = await response.blob();
-      const downloadUrl = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = downloadUrl;
-      a.download = 'video.mp4';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(downloadUrl);
-      toast.success('Download started');
-    } catch (error) {
-      console.error('Download error:', error);
-      toast.error('Failed to download video');
-    }
-  };
 
   useEffect(() => {
     const video = videoRef.current;
@@ -129,22 +93,38 @@ export const VideoPlayer = ({
     }
   };
 
-  const handleViewModeChange = (mode: 'default' | 'medium' | 'fullscreen') => {
-    setViewMode(mode);
-    if (mode === 'fullscreen') {
-      toggleFullscreen();
-    }
+  const handleSeek = (value: number[]) => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const newTime = (value[0] / 100) * duration;
+    video.currentTime = newTime;
+    setCurrentTime(newTime);
   };
 
+  useKeyboardControls({
+    videoRef,
+    togglePlay,
+    toggleFullscreen,
+    skip: (seconds: number) => {
+      const video = videoRef.current;
+      if (!video) return;
+      video.currentTime = Math.max(0, Math.min(video.currentTime + seconds, video.duration));
+    }
+  });
+
   const containerClasses = cn(
-    "relative group bg-black rounded-lg overflow-hidden",
-    viewMode === 'medium' && "w-[854px] h-[480px]",
-    viewMode === 'default' && "w-full aspect-video",
+    "relative group bg-black rounded-lg overflow-hidden transition-all duration-300",
+    {
+      'w-full aspect-video': size === 'default',
+      'w-[854px] h-[480px]': size === 'medium',
+      'fixed inset-0 z-50': size === 'fullscreen'
+    },
     className
   );
 
   return (
-    <div
+    <div 
       ref={containerRef}
       className={containerClasses}
       onMouseEnter={() => setShowControls(true)}
@@ -160,52 +140,37 @@ export const VideoPlayer = ({
         <>
           <video
             ref={videoRef}
-            className="w-full h-full"
+            className="w-full h-full object-contain"
             poster={thumbnail}
             onClick={togglePlay}
             playsInline
-            crossOrigin="anonymous"
           >
             <source src={url} type="video/mp4" />
-            {captions?.map((caption, index) => (
-              <track
-                key={index}
-                kind="subtitles"
-                src={caption.src}
-                srcLang={caption.language}
-                label={caption.label}
-                default={index === 0}
-              />
-            ))}
             Your browser does not support the video tag.
           </video>
+
+          <VideoProgress
+            currentTime={currentTime}
+            duration={duration}
+            onSeek={handleSeek}
+          />
 
           <VideoControls
             isPlaying={isPlaying}
             isFullscreen={isFullscreen}
-            isPiPActive={isPiPActive}
             preferences={preferences}
             showControls={showControls}
             onPlayPause={togglePlay}
             onToggleFullscreen={toggleFullscreen}
-            onTogglePiP={togglePiP}
-            onToggleCaptions={toggleCaptions}
-            onViewModeChange={handleViewModeChange}
+            onViewModeChange={(mode) => {
+              if (mode === 'fullscreen') {
+                toggleFullscreen();
+              }
+            }}
             onPreferenceChange={updatePreference}
             videoRef={videoRef}
-            viewMode={viewMode}
+            viewMode={size}
           />
-
-          {allowDownload && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute top-2 right-2 text-white bg-black/50 hover:bg-black/70"
-              onClick={handleDownload}
-            >
-              <Download className="w-4 h-4" />
-            </Button>
-          )}
         </>
       )}
     </div>

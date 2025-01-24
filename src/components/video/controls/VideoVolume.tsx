@@ -33,11 +33,6 @@ export const VideoVolume = ({ volume, onVolumeChange, onToggleMute }: VideoVolum
     return <Volume2 className="w-4 h-4" />;
   };
 
-  const handleVolumeChange = (value: number[]) => {
-    onVolumeChange(value);
-    localStorage.setItem('videoVolume', value[0].toString());
-  };
-
   return (
     <div 
       className="flex items-center gap-2 group relative"
@@ -55,12 +50,11 @@ export const VideoVolume = ({ volume, onVolumeChange, onToggleMute }: VideoVolum
       </Button>
       <div className={cn(
         "transition-all duration-200 overflow-hidden absolute left-10 bg-black/90 rounded-lg p-2",
-        isHovered ? "w-24 opacity-100 visible" : "w-0 opacity-0 invisible",
-        isMobile && "top-[-45px] left-0"
+        isHovered ? "w-24 opacity-100 visible" : "w-0 opacity-0 invisible"
       )}>
         <Slider
           value={[volume]}
-          onValueChange={handleVolumeChange}
+          onValueChange={onVolumeChange}
           max={1}
           step={0.01}
           className="w-20"

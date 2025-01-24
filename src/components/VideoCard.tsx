@@ -1,7 +1,8 @@
 import { Badge } from "./ui/badge";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
-import { VideoPlayer } from "./video/VideoPlayer";
+import { EnhancedVideoPlayer } from "./video/EnhancedVideoPlayer";
+import { CommentSection } from "./comments/CommentSection";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { VideoCardActions } from "./video/VideoCardActions";
@@ -9,7 +10,6 @@ import { Button } from "./ui/button";
 import { Maximize2, Minimize2 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
-import { useOffline } from "@/hooks/use-offline";
 
 interface VideoCardProps {
   id: string;
@@ -26,7 +26,7 @@ interface VideoCardProps {
   user_id: string;
 }
 
-const VideoCard = ({ 
+export const VideoCard = ({ 
   id,
   title, 
   views, 
@@ -43,7 +43,6 @@ const VideoCard = ({
   const [isPlaying, setIsPlaying] = useState(false);
   const [videoSize, setVideoSize] = useState<'default' | 'medium' | 'fullscreen'>('default');
   const isMobile = useIsMobile();
-  const isOffline = useOffline();
 
   const { data: engagementMetrics } = useQuery({
     queryKey: ['engagement-metrics', id],
@@ -72,13 +71,11 @@ const VideoCard = ({
         return null;
       }
     },
-    enabled: !!id && !isOffline
+    enabled: !!id
   });
 
   const handleTimeUpdate = (currentTime: number, duration: number) => {
-    if (!isOffline) {
-      console.log('Video progress:', Math.round((currentTime / duration) * 100), '%');
-    }
+    console.log('Video progress:', Math.round((currentTime / duration) * 100), '%');
   };
 
   const toggleVideoSize = () => {
@@ -102,7 +99,7 @@ const VideoCard = ({
       <div className="relative group">
         {url && status === 'ready' ? (
           <div className="relative">
-            <VideoPlayer
+            <EnhancedVideoPlayer
               url={url}
               thumbnail={thumbnail}
               onTimeUpdate={handleTimeUpdate}
@@ -112,7 +109,6 @@ const VideoCard = ({
                 videoSize === 'medium' && "w-[854px] h-[480px]",
                 videoSize === 'fullscreen' && "fixed inset-0 z-50 h-screen"
               )}
-              allowDownload={true}
             />
             <Button
               variant="ghost"
@@ -166,10 +162,8 @@ const VideoCard = ({
             sharesCount={engagementMetrics?.shares_count}
           />
         </div>
+        <CommentSection videoId={id} />
       </div>
     </div>
   );
 };
-
-// Add named export
-export { VideoCard };

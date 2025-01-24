@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-export const CreatePlaylistDialog: React.FC = () => {
+export const CreatePlaylistDialog = () => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [isOpen, setIsOpen] = useState(false);
@@ -17,6 +17,12 @@ export const CreatePlaylistDialog: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error("You must be logged in to create a playlist");
+      return;
+    }
+
     try {
       const { data, error } = await supabase
         .from('playlists')
@@ -24,7 +30,7 @@ export const CreatePlaylistDialog: React.FC = () => {
           title,
           description,
           visibility: 'private',
-          user_id: '00000000-0000-0000-0000-000000000000'
+          user_id: user.id
         })
         .select()
         .single();

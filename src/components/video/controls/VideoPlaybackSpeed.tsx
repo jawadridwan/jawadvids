@@ -15,11 +15,6 @@ interface VideoPlaybackSpeedProps {
 }
 
 export const VideoPlaybackSpeed = ({ speed, onSpeedChange }: VideoPlaybackSpeedProps) => {
-  const handleSpeedChange = (value: number) => {
-    onSpeedChange(value);
-    localStorage.setItem('videoPlaybackSpeed', value.toString());
-  };
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -33,7 +28,7 @@ export const VideoPlaybackSpeed = ({ speed, onSpeedChange }: VideoPlaybackSpeedP
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="bg-black/90 border-white/10">
-        <DropdownMenuRadioGroup value={speed.toString()} onValueChange={(value) => handleSpeedChange(Number(value))}>
+        <DropdownMenuRadioGroup value={speed.toString()} onValueChange={(value) => onSpeedChange(Number(value))}>
           {[0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2].map((speedOption) => (
             <DropdownMenuRadioItem
               key={speedOption}

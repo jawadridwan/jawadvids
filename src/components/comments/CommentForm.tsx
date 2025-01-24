@@ -35,27 +35,6 @@ export const CommentForm = ({ videoId, onCommentAdded, parentId }: CommentFormPr
     setIsSubmitting(true);
 
     try {
-      // First fetch recent comments by the user on this video
-      const { data: existingComments } = await supabase
-        .from('comments')
-        .select('content, created_at')
-        .eq('video_id', videoId)
-        .eq('user_id', session.user.id)
-        .is('deleted_at', null)
-        .order('created_at', { ascending: false })
-        .limit(1);
-
-      // Check if the most recent comment is identical and was posted within the last minute
-      if (existingComments && existingComments.length > 0) {
-        const lastComment = existingComments[0];
-        const timeSinceLastComment = Date.now() - new Date(lastComment.created_at).getTime();
-        if (lastComment.content === comment.trim() && timeSinceLastComment < 60000) {
-          toast.error("Please wait a moment before posting the same comment again");
-          return;
-        }
-      }
-
-      // If no recent duplicate exists, insert the new comment
       const { error } = await supabase
         .from('comments')
         .insert({
@@ -63,11 +42,17 @@ export const CommentForm = ({ videoId, onCommentAdded, parentId }: CommentFormPr
           video_id: videoId,
           user_id: session.user.id,
           parent_id: parentId || null
-        });
+        })
+        .select()
+        .single();
 
       if (error) {
-        console.error('Error adding comment:', error);
-        throw error;
+        if (error.code === '23505') { // Unique constraint violation
+          toast.error("You've already posted this exact comment");
+        } else {
+          throw error;
+        }
+        return;
       }
 
       toast.success("Comment added successfully");
