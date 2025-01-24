@@ -6,7 +6,7 @@ interface LoginSectionProps {
   onSignUpClick: () => void;
 }
 
-export const LoginSection = ({ onSignUpClick }: LoginSectionProps) => {
+export const LoginSection: React.FC<LoginSectionProps> = ({ onSignUpClick }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
