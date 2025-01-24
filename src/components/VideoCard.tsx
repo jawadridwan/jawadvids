@@ -100,6 +100,7 @@ export const VideoCard = ({
         {url && status === 'ready' ? (
           <div className="relative">
             <EnhancedVideoPlayer
+              videoId={id}
               url={url}
               thumbnail={thumbnail}
               onTimeUpdate={handleTimeUpdate}
