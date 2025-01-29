@@ -17,9 +17,10 @@ interface Video {
 
 interface VideoActionsProps {
   video: Video;
+  onDelete?: () => void;
 }
 
-export const VideoActions = ({ video }: VideoActionsProps) => {
+export const VideoActions = ({ video, onDelete }: VideoActionsProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const session = useSession();
@@ -49,6 +50,7 @@ export const VideoActions = ({ video }: VideoActionsProps) => {
         title: "Video deleted",
         description: "Your video has been removed.",
       });
+      onDelete?.();
     } catch (error) {
       console.error('Error deleting video:', error);
       toast({

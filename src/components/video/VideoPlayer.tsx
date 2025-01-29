@@ -43,7 +43,6 @@ export const VideoPlayer = ({
     nextVideoId,
     isEnabled: true,
     scrollThreshold: 0.8,
-    scrollBehavior: 'smooth'
   });
 
   useEffect(() => {
