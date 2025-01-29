@@ -13,12 +13,20 @@ import Content from "./pages/Content";
 import Playlists from "./pages/Playlists";
 import Engagement from "./pages/Engagement";
 
-const queryClient = new QueryClient();
+// Create a new QueryClient instance outside the component
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App: React.FC = () => {
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
+    <BrowserRouter>
+      <QueryClientProvider client={queryClient}>
         <SessionContextProvider supabaseClient={supabase}>
           <TooltipProvider>
             <VideoPlaybackProvider>
@@ -34,8 +42,8 @@ const App: React.FC = () => {
             </VideoPlaybackProvider>
           </TooltipProvider>
         </SessionContextProvider>
-      </BrowserRouter>
-    </QueryClientProvider>
+      </QueryClientProvider>
+    </BrowserRouter>
   );
 };
 
