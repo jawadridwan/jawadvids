@@ -1,38 +1,53 @@
-import React, { createContext, useContext, useRef, ReactNode } from 'react';
+import React, { createContext, useContext, useRef, useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface VideoPlaybackContextType {
   registerVideo: (id: string, element: HTMLVideoElement) => void;
   unregisterVideo: (id: string) => void;
-  handlePlay: (playingId: string) => void;
+  handlePlay: (id: string) => void;
+  currentlyPlaying: string | null;
 }
 
-const VideoPlaybackContext = createContext<VideoPlaybackContextType | null>(null);
+const VideoPlaybackContext = createContext<VideoPlaybackContextType | undefined>(undefined);
 
-interface VideoPlaybackProviderProps {
-  children: ReactNode;
-}
-
-export const VideoPlaybackProvider: React.FC<VideoPlaybackProviderProps> = ({ children }) => {
-  const videoRegistry = useRef<Map<string, HTMLVideoElement>>(new Map());
+export const VideoPlaybackProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const videoRefs = useRef<Map<string, HTMLVideoElement>>(new Map());
+  const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
 
   const registerVideo = (id: string, element: HTMLVideoElement) => {
-    videoRegistry.current.set(id, element);
+    videoRefs.current.set(id, element);
   };
 
   const unregisterVideo = (id: string) => {
-    videoRegistry.current.delete(id);
+    videoRefs.current.delete(id);
   };
 
-  const handlePlay = (playingId: string) => {
-    videoRegistry.current.forEach((video, id) => {
-      if (id !== playingId) {
-        video.pause();
+  const handlePlay = (id: string) => {
+    if (currentlyPlaying && currentlyPlaying !== id) {
+      const currentVideo = videoRefs.current.get(currentlyPlaying);
+      if (currentVideo) {
+        currentVideo.pause();
       }
-    });
+    }
+    setCurrentlyPlaying(id);
+
+    // Record view when video starts playing
+    const recordView = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.from('views').insert({
+          video_id: id,
+          viewer_id: user.id,
+          timestamp: new Date().toISOString()
+        });
+      }
+    };
+
+    recordView();
   };
 
   return (
-    <VideoPlaybackContext.Provider value={{ registerVideo, unregisterVideo, handlePlay }}>
+    <VideoPlaybackContext.Provider value={{ registerVideo, unregisterVideo, handlePlay, currentlyPlaying }}>
       {children}
     </VideoPlaybackContext.Provider>
   );
@@ -40,7 +55,7 @@ export const VideoPlaybackProvider: React.FC<VideoPlaybackProviderProps> = ({ ch
 
 export const useVideoPlayback = () => {
   const context = useContext(VideoPlaybackContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useVideoPlayback must be used within a VideoPlaybackProvider');
   }
   return context;

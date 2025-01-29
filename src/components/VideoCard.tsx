@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSession } from "@supabase/auth-helpers-react";
 import { Button } from "./ui/button";
@@ -44,10 +44,70 @@ export const VideoCard = ({
   const [isPlaying, setIsPlaying] = useState(false);
   const [videoSize, setVideoSize] = useState<'default' | 'medium' | 'fullscreen'>('default');
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [realTimeMetrics, setRealTimeMetrics] = useState({
+    views: parseInt(views),
+    likes,
+    dislikes,
+    comments: 0
+  });
   const isMobile = useIsMobile();
   const session = useSession();
 
   const isOwner = session?.user?.id === user_id;
+
+  // Subscribe to real-time updates
+  useEffect(() => {
+    const channel = supabase
+      .channel(`video_metrics_${id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'performance_metrics',
+          filter: `video_id=eq.${id}`
+        },
+        (payload: any) => {
+          const newData = payload.new;
+          setRealTimeMetrics(prev => ({
+            ...prev,
+            views: newData.views_count || prev.views,
+            comments: newData.comments_count || prev.comments
+          }));
+          console.log('Performance metrics updated:', newData);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'reactions',
+          filter: `video_id=eq.${id}`
+        },
+        (payload: any) => {
+          // Update likes/dislikes count
+          supabase
+            .from('reactions')
+            .select('type')
+            .eq('video_id', id)
+            .then(({ data }) => {
+              if (data) {
+                setRealTimeMetrics(prev => ({
+                  ...prev,
+                  likes: data.filter(r => r.type === 'like').length,
+                  dislikes: data.filter(r => r.type === 'dislike').length
+                }));
+              }
+            });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [id]);
 
   const { data: engagementMetrics } = useQuery({
     queryKey: ['engagement-metrics', id],
@@ -66,9 +126,9 @@ export const VideoCard = ({
         }
 
         return metrics || {
-          views_count: 0,
-          likes_count: 0,
-          comments_count: 0,
+          views_count: realTimeMetrics.views,
+          likes_count: realTimeMetrics.likes,
+          comments_count: realTimeMetrics.comments,
           shares_count: 0
         };
       } catch (error) {
@@ -181,7 +241,7 @@ export const VideoCard = ({
           title={title}
           description={description}
           hashtags={hashtags}
-          views={views}
+          views={realTimeMetrics.views.toString()}
           status={status}
         />
 
@@ -189,9 +249,9 @@ export const VideoCard = ({
           <VideoCardActions
             videoId={id}
             userId={user_id}
-            likes={likes}
-            dislikes={dislikes}
-            commentsCount={engagementMetrics?.comments_count}
+            likes={realTimeMetrics.likes}
+            dislikes={realTimeMetrics.dislikes}
+            commentsCount={realTimeMetrics.comments}
             sharesCount={engagementMetrics?.shares_count}
           />
         </div>
