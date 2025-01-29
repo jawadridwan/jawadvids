@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
@@ -5,7 +6,7 @@ import { Button } from "../ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
-interface VideoEditDialogProps {
+export interface VideoEditDialogProps {
   id: string;
   title: string;
   description?: string;

@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 import { PlaybackControls } from './PlaybackControls';
 import { ViewModeControls } from './ViewModeControls';
 
-interface VideoControlsProps {
+export interface VideoControlsProps {
   isPlaying: boolean;
   isFullscreen: boolean;
   showControls: boolean;
@@ -12,6 +12,7 @@ interface VideoControlsProps {
   onViewModeChange: (mode: 'default' | 'medium' | 'fullscreen') => void;
   videoRef: React.RefObject<HTMLVideoElement>;
   viewMode: 'default' | 'medium' | 'fullscreen';
+  children?: React.ReactNode;
 }
 
 export const VideoControls = ({
@@ -23,6 +24,7 @@ export const VideoControls = ({
   onViewModeChange,
   videoRef,
   viewMode,
+  children,
 }: VideoControlsProps) => {
   return (
     <div
@@ -40,6 +42,7 @@ export const VideoControls = ({
         />
 
         <div className="flex items-center justify-between gap-4">
+          {children}
           <ViewModeControls
             isFullscreen={isFullscreen}
             onToggleFullscreen={onToggleFullscreen}

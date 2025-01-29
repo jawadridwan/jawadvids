@@ -1,3 +1,4 @@
+import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { Pencil, Trash2 } from "lucide-react";
@@ -6,14 +7,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "@supabase/auth-helpers-react";
-
-interface Video {
-  id: string;
-  title: string;
-  description?: string;
-  hashtags?: string[];
-  user_id: string;
-}
+import { Video } from "@/types/video";
 
 interface VideoActionsProps {
   video: Video;
@@ -24,6 +18,7 @@ export const VideoActions = ({ video, onDelete }: VideoActionsProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const session = useSession();
+  const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
 
   const isOwner = session?.user?.id === video.user_id;
 
@@ -65,16 +60,14 @@ export const VideoActions = ({ video, onDelete }: VideoActionsProps) => {
     <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
       {isOwner && (
         <>
-          <Dialog>
-            <Button
-              variant="secondary"
-              size="icon"
-              className="bg-black/50 hover:bg-black/70"
-            >
-              <Pencil className="h-4 w-4" />
-            </Button>
-            <VideoEditDialog video={video} onClose={() => {}} />
-          </Dialog>
+          <Button
+            variant="secondary"
+            size="icon"
+            className="bg-black/50 hover:bg-black/70"
+            onClick={() => setIsEditDialogOpen(true)}
+          >
+            <Pencil className="h-4 w-4" />
+          </Button>
           <Button
             variant="destructive"
             size="icon"
@@ -85,6 +78,13 @@ export const VideoActions = ({ video, onDelete }: VideoActionsProps) => {
           </Button>
         </>
       )}
+      <VideoEditDialog
+        id={video.id}
+        title={video.title}
+        description={video.description}
+        isOpen={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+      />
     </div>
   );
 };
