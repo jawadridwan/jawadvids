@@ -1,15 +1,13 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { useSession } from "@supabase/auth-helpers-react";
-import { Button } from "./ui/button";
-import { Maximize2, Minimize2, Pencil, Trash2 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { EnhancedVideoPlayer } from "./video/EnhancedVideoPlayer";
 import { VideoCardActions } from "./video/VideoCardActions";
 import { VideoMetadata } from "./video/VideoMetadata";
 import { VideoEditDialog } from "./video/VideoEditDialog";
+import { VideoThumbnail } from "./video/VideoThumbnail";
+import { VideoOwnerActions } from "./video/VideoOwnerActions";
 import { cn } from "@/lib/utils";
 
 interface VideoCardProps {
@@ -50,12 +48,11 @@ export const VideoCard = ({
     dislikes,
     comments: 0
   });
+  
   const isMobile = useIsMobile();
   const session = useSession();
-
   const isOwner = session?.user?.id === user_id;
 
-  // Subscribe to real-time updates
   useEffect(() => {
     const channel = supabase
       .channel(`video_metrics_${id}`)
@@ -74,7 +71,6 @@ export const VideoCard = ({
             views: newData.views_count || prev.views,
             comments: newData.comments_count || prev.comments
           }));
-          console.log('Performance metrics updated:', newData);
         }
       )
       .on(
@@ -85,8 +81,7 @@ export const VideoCard = ({
           table: 'reactions',
           filter: `video_id=eq.${id}`
         },
-        (payload: any) => {
-          // Update likes/dislikes count
+        () => {
           supabase
             .from('reactions')
             .select('type')
@@ -108,36 +103,6 @@ export const VideoCard = ({
       supabase.removeChannel(channel);
     };
   }, [id]);
-
-  const { data: engagementMetrics } = useQuery({
-    queryKey: ['engagement-metrics', id],
-    queryFn: async () => {
-      try {
-        const { data: metrics, error } = await supabase
-          .from('performance_metrics')
-          .select('*')
-          .eq('video_id', id)
-          .maybeSingle();
-
-        if (error) {
-          console.error('Error fetching engagement metrics:', error);
-          toast.error('Failed to load engagement metrics');
-          return null;
-        }
-
-        return metrics || {
-          views_count: realTimeMetrics.views,
-          likes_count: realTimeMetrics.likes,
-          comments_count: realTimeMetrics.comments,
-          shares_count: 0
-        };
-      } catch (error) {
-        console.error('Error in engagement metrics query:', error);
-        return null;
-      }
-    },
-    enabled: !!id
-  });
 
   const handleTimeUpdate = (currentTime: number, duration: number) => {
     console.log('Video progress:', Math.round((currentTime / duration) * 100), '%');
@@ -165,7 +130,6 @@ export const VideoCard = ({
         .eq('id', id);
 
       if (error) throw error;
-
       toast.success('Video deleted successfully');
     } catch (error) {
       console.error('Error deleting video:', error);
@@ -181,60 +145,23 @@ export const VideoCard = ({
         className
       )}>
         <div className="relative group">
-          {url && status === 'ready' ? (
-            <div className="relative">
-              <EnhancedVideoPlayer
-                videoId={id}
-                url={url}
-                thumbnail={thumbnail}
-                onTimeUpdate={handleTimeUpdate}
-                onPlayStateChange={setIsPlaying}
-                className={cn(
-                  "w-full",
-                  videoSize === 'medium' && "w-[854px] h-[480px]",
-                  videoSize === 'fullscreen' && "fixed inset-0 z-50 h-screen"
-                )}
-              />
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute top-2 right-2 text-white bg-black/50 hover:bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={toggleVideoSize}
-              >
-                {videoSize === 'fullscreen' ? (
-                  <Minimize2 className="w-4 h-4" />
-                ) : (
-                  <Maximize2 className="w-4 h-4" />
-                )}
-              </Button>
-            </div>
-          ) : (
-            <img 
-              src={thumbnail || "/placeholder.svg"} 
-              alt={title} 
-              className="w-full aspect-video object-cover"
-            />
-          )}
-          {isOwner && (
-            <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              <Button
-                variant="secondary"
-                size="icon"
-                className="bg-black/50 hover:bg-black/70"
-                onClick={() => setIsEditDialogOpen(true)}
-              >
-                <Pencil className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="destructive"
-                size="icon"
-                className="bg-black/50 hover:bg-red-600"
-                onClick={handleDelete}
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            </div>
-          )}
+          <VideoThumbnail
+            url={url}
+            thumbnail={thumbnail}
+            title={title}
+            status={status}
+            videoId={id}
+            videoSize={videoSize}
+            isPlaying={isPlaying}
+            onPlayStateChange={setIsPlaying}
+            onTimeUpdate={handleTimeUpdate}
+            onVideoSizeChange={toggleVideoSize}
+          />
+          <VideoOwnerActions
+            isOwner={isOwner}
+            onEdit={() => setIsEditDialogOpen(true)}
+            onDelete={handleDelete}
+          />
         </div>
 
         <VideoMetadata
@@ -252,7 +179,6 @@ export const VideoCard = ({
             likes={realTimeMetrics.likes}
             dislikes={realTimeMetrics.dislikes}
             commentsCount={realTimeMetrics.comments}
-            sharesCount={engagementMetrics?.shares_count}
           />
         </div>
       </div>
