@@ -1,23 +1,16 @@
-import { Badge } from "./ui/badge";
-import { cn } from "@/lib/utils";
 import { useState } from "react";
-import { EnhancedVideoPlayer } from "./video/EnhancedVideoPlayer";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { VideoCardActions } from "./video/VideoCardActions";
+import { useSession } from "@supabase/auth-helpers-react";
 import { Button } from "./ui/button";
 import { Maximize2, Minimize2, Pencil, Trash2 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
-import { useSession } from "@supabase/auth-helpers-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "./ui/dialog";
-import { Input } from "./ui/input";
-import { Textarea } from "./ui/textarea";
+import { supabase } from "@/integrations/supabase/client";
+import { EnhancedVideoPlayer } from "./video/EnhancedVideoPlayer";
+import { VideoCardActions } from "./video/VideoCardActions";
+import { VideoMetadata } from "./video/VideoMetadata";
+import { VideoEditDialog } from "./video/VideoEditDialog";
+import { cn } from "@/lib/utils";
 
 interface VideoCardProps {
   id: string;
@@ -51,8 +44,6 @@ export const VideoCard = ({
   const [isPlaying, setIsPlaying] = useState(false);
   const [videoSize, setVideoSize] = useState<'default' | 'medium' | 'fullscreen'>('default');
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [editTitle, setEditTitle] = useState(title);
-  const [editDescription, setEditDescription] = useState(description || '');
   const isMobile = useIsMobile();
   const session = useSession();
 
@@ -116,30 +107,9 @@ export const VideoCard = ({
       if (error) throw error;
 
       toast.success('Video deleted successfully');
-      // Optionally trigger a refetch of the videos list
     } catch (error) {
       console.error('Error deleting video:', error);
       toast.error('Failed to delete video');
-    }
-  };
-
-  const handleEdit = async () => {
-    try {
-      const { error } = await supabase
-        .from('videos')
-        .update({
-          title: editTitle,
-          description: editDescription,
-        })
-        .eq('id', id);
-
-      if (error) throw error;
-
-      toast.success('Video updated successfully');
-      setIsEditDialogOpen(false);
-    } catch (error) {
-      console.error('Error updating video:', error);
-      toast.error('Failed to update video');
     }
   };
 
@@ -185,14 +155,6 @@ export const VideoCard = ({
               className="w-full aspect-video object-cover"
             />
           )}
-          {status && (
-            <Badge 
-              variant={status === 'ready' ? 'default' : status === 'processing' ? 'secondary' : 'destructive'}
-              className="absolute top-2 left-2"
-            >
-              {status === 'ready' ? 'Ready' : status === 'processing' ? 'Processing' : 'Failed'}
-            </Badge>
-          )}
           {isOwner && (
             <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
               <Button
@@ -214,52 +176,34 @@ export const VideoCard = ({
             </div>
           )}
         </div>
-        <div className="p-4 space-y-3">
-          <h3 className="text-white font-medium line-clamp-2 text-base md:text-lg">{title}</h3>
-          {description && (
-            <p className="text-youtube-gray text-sm line-clamp-2">{description}</p>
-          )}
-          <div className="flex flex-wrap gap-2">
-            {hashtags?.map((tag, index) => (
-              <span key={index} className="text-blue-400 text-xs hover:underline cursor-pointer">
-                #{tag}
-              </span>
-            ))}
-          </div>
-          <div className="flex items-center justify-between pt-2">
-            <p className="text-youtube-gray text-sm">{views} views</p>
-            <VideoCardActions
-              videoId={id}
-              userId={user_id}
-              likes={likes}
-              dislikes={dislikes}
-              commentsCount={engagementMetrics?.comments_count}
-              sharesCount={engagementMetrics?.shares_count}
-            />
-          </div>
+
+        <VideoMetadata
+          title={title}
+          description={description}
+          hashtags={hashtags}
+          views={views}
+          status={status}
+        />
+
+        <div className="px-4 pb-4">
+          <VideoCardActions
+            videoId={id}
+            userId={user_id}
+            likes={likes}
+            dislikes={dislikes}
+            commentsCount={engagementMetrics?.comments_count}
+            sharesCount={engagementMetrics?.shares_count}
+          />
         </div>
       </div>
 
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Video</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 pt-4">
-            <Input
-              value={editTitle}
-              onChange={(e) => setEditTitle(e.target.value)}
-              placeholder="Video title"
-            />
-            <Textarea
-              value={editDescription}
-              onChange={(e) => setEditDescription(e.target.value)}
-              placeholder="Video description"
-            />
-            <Button onClick={handleEdit}>Save Changes</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <VideoEditDialog
+        id={id}
+        title={title}
+        description={description}
+        isOpen={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+      />
     </>
   );
 };

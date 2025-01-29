@@ -4,6 +4,8 @@ import { VideoControls } from './controls/VideoControls';
 import { useFullscreen } from './hooks/useFullscreen';
 import { useKeyboardControls } from './hooks/useKeyboardControls';
 import { useVideoState } from './hooks/useVideoState';
+import { VideoVolume } from './controls/VideoVolume';
+import { VideoPlaybackSpeed } from './controls/VideoPlaybackSpeed';
 
 interface EnhancedVideoPlayerProps {
   url: string;
@@ -25,6 +27,8 @@ export const EnhancedVideoPlayer = ({
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [showControls, setShowControls] = useState(true);
+  const [volume, setVolume] = useState(1);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [viewMode, setViewMode] = useState<'default' | 'medium' | 'fullscreen'>('default');
 
   const { isFullscreen, toggleFullscreen } = useFullscreen(containerRef);
@@ -40,6 +44,21 @@ export const EnhancedVideoPlayer = ({
     const video = videoRef.current;
     if (video && onTimeUpdate) {
       onTimeUpdate(video.currentTime, video.duration);
+    }
+  };
+
+  const handleVolumeChange = (newVolume: number[]) => {
+    if (videoRef.current) {
+      const volume = newVolume[0];
+      videoRef.current.volume = volume;
+      setVolume(volume);
+    }
+  };
+
+  const handleSpeedChange = (speed: number) => {
+    if (videoRef.current) {
+      videoRef.current.playbackRate = speed;
+      setPlaybackSpeed(speed);
     }
   };
 
@@ -89,7 +108,17 @@ export const EnhancedVideoPlayer = ({
             }}
             videoRef={videoRef}
             viewMode={viewMode}
-          />
+          >
+            <VideoVolume
+              volume={volume}
+              onVolumeChange={handleVolumeChange}
+              onToggleMute={() => handleVolumeChange([volume === 0 ? 1 : 0])}
+            />
+            <VideoPlaybackSpeed
+              speed={playbackSpeed}
+              onSpeedChange={handleSpeedChange}
+            />
+          </VideoControls>
         </>
       )}
     </div>
