@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useRef, useState, useEffect } from 'react';
+import React, { createContext, useContext, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface VideoPlaybackContextType {
@@ -11,7 +11,7 @@ interface VideoPlaybackContextType {
 const VideoPlaybackContext = createContext<VideoPlaybackContextType | undefined>(undefined);
 
 export const VideoPlaybackProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const videoRefs = useRef<Map<string, HTMLVideoElement>>(new Map());
+  const videoRefs = useRef(new Map<string, HTMLVideoElement>());
   const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
 
   const registerVideo = (id: string, element: HTMLVideoElement) => {
@@ -22,7 +22,7 @@ export const VideoPlaybackProvider: React.FC<{ children: React.ReactNode }> = ({
     videoRefs.current.delete(id);
   };
 
-  const handlePlay = (id: string) => {
+  const handlePlay = async (id: string) => {
     if (currentlyPlaying && currentlyPlaying !== id) {
       const currentVideo = videoRefs.current.get(currentlyPlaying);
       if (currentVideo) {
@@ -31,8 +31,7 @@ export const VideoPlaybackProvider: React.FC<{ children: React.ReactNode }> = ({
     }
     setCurrentlyPlaying(id);
 
-    // Record view when video starts playing
-    const recordView = async () => {
+    try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         await supabase.from('views').insert({
@@ -41,13 +40,20 @@ export const VideoPlaybackProvider: React.FC<{ children: React.ReactNode }> = ({
           timestamp: new Date().toISOString()
         });
       }
-    };
+    } catch (error) {
+      console.error('Error recording view:', error);
+    }
+  };
 
-    recordView();
+  const value = {
+    registerVideo,
+    unregisterVideo,
+    handlePlay,
+    currentlyPlaying
   };
 
   return (
-    <VideoPlaybackContext.Provider value={{ registerVideo, unregisterVideo, handlePlay, currentlyPlaying }}>
+    <VideoPlaybackContext.Provider value={value}>
       {children}
     </VideoPlaybackContext.Provider>
   );

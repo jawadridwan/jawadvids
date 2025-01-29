@@ -24,25 +24,27 @@ const queryClient = new QueryClient({
 
 const App: React.FC = () => {
   return (
-    <QueryClientProvider client={queryClient}>
-      <SessionContextProvider supabaseClient={supabase}>
-        <BrowserRouter>
-          <TooltipProvider>
-            <VideoPlaybackProvider>
-              <Toaster />
-              <Sonner />
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/analytics" element={<Analytics />} />
-                <Route path="/content" element={<Content />} />
-                <Route path="/playlists" element={<Playlists />} />
-                <Route path="/engagement" element={<Engagement />} />
-              </Routes>
-            </VideoPlaybackProvider>
-          </TooltipProvider>
-        </BrowserRouter>
-      </SessionContextProvider>
-    </QueryClientProvider>
+    <React.StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <SessionContextProvider supabaseClient={supabase}>
+          <BrowserRouter>
+            <TooltipProvider>
+              <VideoPlaybackProvider>
+                <Toaster />
+                <Sonner />
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/analytics" element={<Analytics />} />
+                  <Route path="/content" element={<Content />} />
+                  <Route path="/playlists" element={<Playlists />} />
+                  <Route path="/engagement" element={<Engagement />} />
+                </Routes>
+              </VideoPlaybackProvider>
+            </TooltipProvider>
+          </BrowserRouter>
+        </SessionContextProvider>
+      </QueryClientProvider>
+    </React.StrictMode>
   );
 };
 
