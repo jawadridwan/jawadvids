@@ -15,29 +15,27 @@ import Engagement from "./pages/Engagement";
 
 const queryClient = new QueryClient();
 
-const App = () => {
+const App: React.FC = () => {
   return (
-    <React.StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <SessionContextProvider supabaseClient={supabase}>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <SessionContextProvider supabaseClient={supabase}>
+          <TooltipProvider>
             <VideoPlaybackProvider>
-              <TooltipProvider>
-                <Toaster />
-                <Sonner />
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/analytics" element={<Analytics />} />
-                  <Route path="/content" element={<Content />} />
-                  <Route path="/playlists" element={<Playlists />} />
-                  <Route path="/engagement" element={<Engagement />} />
-                </Routes>
-              </TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/analytics" element={<Analytics />} />
+                <Route path="/content" element={<Content />} />
+                <Route path="/playlists" element={<Playlists />} />
+                <Route path="/engagement" element={<Engagement />} />
+              </Routes>
             </VideoPlaybackProvider>
-          </SessionContextProvider>
-        </BrowserRouter>
-      </QueryClientProvider>
-    </React.StrictMode>
+          </TooltipProvider>
+        </SessionContextProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 };
 
