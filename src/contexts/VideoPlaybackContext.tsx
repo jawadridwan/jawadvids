@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useRef } from 'react';
+import React, { createContext, useContext, useRef, ReactNode } from 'react';
 
 interface VideoPlaybackContextType {
   registerVideo: (id: string, element: HTMLVideoElement) => void;
@@ -8,7 +8,11 @@ interface VideoPlaybackContextType {
 
 const VideoPlaybackContext = createContext<VideoPlaybackContextType | null>(null);
 
-export const VideoPlaybackProvider = ({ children }: { children: React.ReactNode }) => {
+interface VideoPlaybackProviderProps {
+  children: ReactNode;
+}
+
+export const VideoPlaybackProvider: React.FC<VideoPlaybackProviderProps> = ({ children }) => {
   const videoRegistry = useRef<Map<string, HTMLVideoElement>>(new Map());
 
   const registerVideo = (id: string, element: HTMLVideoElement) => {
