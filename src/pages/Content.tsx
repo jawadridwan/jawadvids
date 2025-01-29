@@ -1,18 +1,19 @@
 import { Sidebar } from "@/components/Sidebar";
 import { VideoList } from "@/components/VideoList";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Video } from "@/types/video";
 import { useSession } from "@supabase/auth-helpers-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { VideoUploadDialog } from "@/components/upload/VideoUploadDialog";
+import { Loader2 } from "lucide-react";
 
 const Content = () => {
   const [videos, setVideos] = useState<Video[]>([]);
   const session = useSession();
 
-  const { data: userVideos, isError } = useQuery({
+  const { data: userVideos, isError, refetch, isLoading } = useQuery({
     queryKey: ['user-videos'],
     queryFn: async () => {
       if (!session?.user?.id) return [];
@@ -63,6 +64,31 @@ const Content = () => {
     enabled: !!session?.user?.id
   });
 
+  // Subscribe to real-time updates
+  useEffect(() => {
+    const channel = supabase
+      .channel('content_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'videos',
+          filter: `user_id=eq.${session?.user?.id}`
+        },
+        (payload) => {
+          console.log('Video changes detected:', payload);
+          refetch();
+          toast.success('Content updated');
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [session?.user?.id, refetch]);
+
   if (!session) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-youtube-darker">
@@ -77,7 +103,15 @@ const Content = () => {
       <main className="flex-1 p-8">
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-center mb-8">
-            <h1 className="text-2xl font-bold text-white">Your Content</h1>
+            <div className="flex items-center gap-4">
+              <h1 className="text-2xl font-bold text-white">Your Content</h1>
+              {isLoading && (
+                <div className="flex items-center gap-2 text-youtube-gray">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Loading...</span>
+                </div>
+              )}
+            </div>
             <VideoUploadDialog onUploadComplete={(video) => setVideos([...videos, video])} />
           </div>
           {isError ? (

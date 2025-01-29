@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { useSession } from "@supabase/auth-helpers-react";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 interface VideoWithMetrics {
   id: string;
@@ -37,7 +38,7 @@ const Analytics = () => {
     enabled: !!session?.user?.id
   });
 
-  const { data: videoStats } = useQuery({
+  const { data: videoStats, isLoading } = useQuery({
     queryKey: ['videoStats', videos],
     queryFn: async () => {
       try {
@@ -72,6 +73,7 @@ const Analytics = () => {
     enabled: !!videos
   });
 
+  // Subscribe to real-time updates
   useEffect(() => {
     const channel = supabase
       .channel('analytics_changes')
@@ -80,9 +82,10 @@ const Analytics = () => {
         {
           event: '*',
           schema: 'public',
-          table: 'videos'
+          table: 'performance_metrics'
         },
         () => {
+          console.log('Performance metrics updated, refreshing data...');
           refetch();
         }
       )
@@ -110,32 +113,44 @@ const Analytics = () => {
       <Sidebar />
       <main className="flex-1 p-6">
         <div className="max-w-7xl mx-auto">
-          <h1 className="text-2xl font-bold text-white mb-6">Analytics Dashboard</h1>
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-2xl font-bold text-white">Analytics Dashboard</h1>
+            {isLoading && (
+              <div className="flex items-center gap-2 text-youtube-gray">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Updating metrics...</span>
+              </div>
+            )}
+          </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 animate-fade-in">
             <MetricCard
               title="Total Videos"
               value={videoStats?.totalVideos || 0}
               icon="video"
+              className="hover:scale-105 transition-transform"
             />
             <MetricCard
               title="Total Views"
               value={videoStats?.totalViews || 0}
               icon="eye"
+              className="hover:scale-105 transition-transform"
             />
             <MetricCard
               title="Total Likes"
               value={videoStats?.totalLikes || 0}
               icon="thumbs-up"
+              className="hover:scale-105 transition-transform"
             />
             <MetricCard
               title="Total Comments"
               value={videoStats?.totalComments || 0}
               icon="message-circle"
+              className="hover:scale-105 transition-transform"
             />
           </div>
 
-          <div className="bg-youtube-dark rounded-lg p-6">
+          <div className="bg-youtube-dark rounded-lg p-6 animate-fade-in">
             <h2 className="text-xl font-semibold text-white mb-4">Performance Over Time</h2>
             <AnalyticsChart />
           </div>
