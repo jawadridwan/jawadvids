@@ -3,7 +3,7 @@ import { MetricCard } from "@/components/MetricCard";
 import { AnalyticsChart } from "@/components/AnalyticsChart";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSession } from "@supabase/auth-helpers-react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
@@ -19,6 +19,11 @@ interface VideoWithMetrics {
 
 const Analytics = () => {
   const session = useSession();
+  const [realtimeStats, setRealtimeStats] = useState<{
+    totalViews: number;
+    totalLikes: number;
+    totalComments: number;
+  } | null>(null);
 
   const { data: videos, refetch } = useQuery({
     queryKey: ['videos', session?.user?.id],
@@ -59,6 +64,12 @@ const Analytics = () => {
           return sum + (metrics?.comments_count || 0);
         }, 0) || 0;
 
+        setRealtimeStats({
+          totalViews,
+          totalLikes,
+          totalComments
+        });
+
         return {
           totalVideos,
           totalViews,
@@ -73,8 +84,12 @@ const Analytics = () => {
     enabled: !!videos
   });
 
-  // Subscribe to real-time updates
+  // Subscribe to real-time updates for views, reactions, and comments
   useEffect(() => {
+    if (!videos?.length) return;
+
+    const videoIds = videos.map(video => video.id);
+    
     const channel = supabase
       .channel('analytics_changes')
       .on(
@@ -82,11 +97,41 @@ const Analytics = () => {
         {
           event: '*',
           schema: 'public',
-          table: 'performance_metrics'
+          table: 'views',
+          filter: `video_id=in.(${videoIds.join(',')})`
         },
         () => {
-          console.log('Performance metrics updated, refreshing data...');
+          console.log('Views updated, refreshing data...');
           refetch();
+          toast.success('Views updated');
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'reactions',
+          filter: `video_id=in.(${videoIds.join(',')})`
+        },
+        () => {
+          console.log('Reactions updated, refreshing data...');
+          refetch();
+          toast.success('Reactions updated');
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'comments',
+          filter: `video_id=in.(${videoIds.join(',')})`
+        },
+        () => {
+          console.log('Comments updated, refreshing data...');
+          refetch();
+          toast.success('Comments updated');
         }
       )
       .subscribe((status) => {
@@ -98,7 +143,7 @@ const Analytics = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [refetch]);
+  }, [videos, refetch]);
 
   if (!session) {
     return (
@@ -132,19 +177,19 @@ const Analytics = () => {
             />
             <MetricCard
               title="Total Views"
-              value={videoStats?.totalViews || 0}
+              value={realtimeStats?.totalViews || videoStats?.totalViews || 0}
               icon="eye"
               className="hover:scale-105 transition-transform"
             />
             <MetricCard
               title="Total Likes"
-              value={videoStats?.totalLikes || 0}
+              value={realtimeStats?.totalLikes || videoStats?.totalLikes || 0}
               icon="thumbs-up"
               className="hover:scale-105 transition-transform"
             />
             <MetricCard
               title="Total Comments"
-              value={videoStats?.totalComments || 0}
+              value={realtimeStats?.totalComments || videoStats?.totalComments || 0}
               icon="message-circle"
               className="hover:scale-105 transition-transform"
             />

@@ -2,9 +2,10 @@ import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "rec
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useEffect } from "react";
 
 export const AnalyticsChart = () => {
-  const { data: viewsData } = useQuery({
+  const { data: viewsData, refetch } = useQuery({
     queryKey: ['views-over-time'],
     queryFn: async () => {
       try {
@@ -63,6 +64,29 @@ export const AnalyticsChart = () => {
       }
     }
   });
+
+  // Subscribe to real-time view updates
+  useEffect(() => {
+    const channel = supabase
+      .channel('views_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'views'
+        },
+        () => {
+          console.log('Views updated, refreshing chart...');
+          refetch();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [refetch]);
 
   return (
     <div className="bg-youtube-dark p-6 rounded-xl h-[300px]">

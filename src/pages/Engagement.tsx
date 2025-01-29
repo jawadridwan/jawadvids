@@ -4,11 +4,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@supabase/auth-helpers-react";
 import { MetricCard } from "@/components/MetricCard";
 import { toast } from "sonner";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 
 const Engagement = () => {
   const session = useSession();
+  const [realtimeEngagement, setRealtimeEngagement] = useState<{
+    totalLikes: number;
+    totalComments: number;
+    totalShares: number;
+  } | null>(null);
 
   const { data: engagementData, isError: isEngagementError, refetch: refetchEngagement } = useQuery({
     queryKey: ['engagement-metrics'],
@@ -80,8 +85,10 @@ const Engagement = () => {
 
   // Subscribe to real-time updates
   useEffect(() => {
+    if (!session?.user?.id) return;
+
     const channel = supabase
-      .channel('engagement_changes')
+      .channel('engagement_updates')
       .on(
         'postgres_changes',
         {
@@ -95,12 +102,39 @@ const Engagement = () => {
           toast.success('Engagement metrics updated');
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'performance_metrics'
+        },
+        () => {
+          console.log('Performance metrics updated');
+          refetchEngagement();
+          toast.success('Performance metrics updated');
+        }
+      )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [refetchEngagement]);
+  }, [refetchEngagement, session?.user?.id]);
+
+  useEffect(() => {
+    if (engagementData) {
+      const totalLikes = engagementData.filter(e => e.type === 'like').length;
+      const totalComments = engagementData.filter(e => e.type === 'comment').length;
+      const totalShares = engagementData.filter(e => e.type === 'share').length;
+
+      setRealtimeEngagement({
+        totalLikes,
+        totalComments,
+        totalShares
+      });
+    }
+  }, [engagementData]);
 
   if (!session) {
     return (
@@ -109,10 +143,6 @@ const Engagement = () => {
       </div>
     );
   }
-
-  const totalLikes = engagementData?.filter(e => e.type === 'like').length || 0;
-  const totalComments = engagementData?.filter(e => e.type === 'comment').length || 0;
-  const totalShares = engagementData?.filter(e => e.type === 'share').length || 0;
 
   if (isEngagementError || isPerformanceError) {
     return (
@@ -140,7 +170,7 @@ const Engagement = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-in">
             <MetricCard
               title="Total Likes"
-              value={totalLikes.toString()}
+              value={realtimeEngagement?.totalLikes || 0}
               change={"+12.3%"}
               positive
               className="hover:scale-105 transition-transform"
@@ -148,7 +178,7 @@ const Engagement = () => {
             
             <MetricCard
               title="Total Comments"
-              value={totalComments.toString()}
+              value={realtimeEngagement?.totalComments || 0}
               change={"+8.1%"}
               positive
               className="hover:scale-105 transition-transform"
@@ -156,7 +186,7 @@ const Engagement = () => {
             
             <MetricCard
               title="Total Shares"
-              value={totalShares.toString()}
+              value={realtimeEngagement?.totalShares || 0}
               change={"+15.7%"}
               positive
               className="hover:scale-105 transition-transform"
