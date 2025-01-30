@@ -47,12 +47,20 @@ export const PlaylistGrid = () => {
 
   const handleCreatePlaylist = async () => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast.error("You must be logged in to create a playlist");
+        return;
+      }
+
       const { error } = await supabase
         .from('playlists')
         .insert({
           title: newPlaylist.title,
           description: newPlaylist.description,
-          visibility: 'private'
+          visibility: 'private',
+          user_id: user.id
         });
 
       if (error) throw error;

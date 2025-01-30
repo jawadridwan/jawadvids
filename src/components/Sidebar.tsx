@@ -1,6 +1,6 @@
+import React, { useState } from "react";
 import { Home, TrendingUp, PlaySquare, Clock, ThumbsUp, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -70,7 +70,6 @@ export const Sidebar = () => {
     </div>
   );
 
-  // Mobile sidebar using Sheet component
   const MobileSidebar = () => (
     <Sheet>
       <SheetTrigger asChild>
