@@ -4,6 +4,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useSession } from "@supabase/auth-helpers-react";
 
 interface VideoInteractionBarProps {
   videoId: string;
@@ -25,13 +26,20 @@ export const VideoInteractionBar = ({
   const [likes, setLikes] = useState(initialLikes);
   const [dislikes, setDislikes] = useState(initialDislikes);
   const [comments, setComments] = useState(initialComments);
+  const session = useSession();
 
   const handleReaction = async (type: 'like' | 'dislike') => {
+    if (!session?.user) {
+      toast.error('Please sign in to react to videos');
+      return;
+    }
+
     try {
       const { data: existingReaction } = await supabase
         .from('reactions')
         .select()
         .eq('video_id', videoId)
+        .eq('user_id', session.user.id)
         .eq('type', type)
         .single();
 
@@ -45,14 +53,29 @@ export const VideoInteractionBar = ({
       } else {
         await supabase
           .from('reactions')
-          .insert({ video_id: videoId, type });
+          .insert({ 
+            video_id: videoId,
+            user_id: session.user.id,
+            type 
+          });
         
-        type === 'like' ? setLikes(prev => prev + 1) : setDislikes(prev => prev + 1);
+        type === 'like' ? setLikes(prev => prev + 1) : setDislikes(prev => prev - 1);
       }
 
       onInteraction?.();
+      toast.success(`${type === 'like' ? 'Liked' : 'Disliked'} video`);
     } catch (error) {
+      console.error('Error handling reaction:', error);
       toast.error('Failed to update reaction');
+    }
+  };
+
+  const handleShare = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      toast.success('Video link copied to clipboard');
+    } catch (error) {
+      toast.error('Failed to copy link');
     }
   };
 
@@ -91,6 +114,7 @@ export const VideoInteractionBar = ({
         variant="ghost"
         size="sm"
         className="flex items-center gap-1 hover:bg-youtube-dark"
+        onClick={handleShare}
       >
         <Share2 className="w-4 h-4" />
         <span>Share</span>

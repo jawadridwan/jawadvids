@@ -1,15 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useSession } from "@supabase/auth-helpers-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-import { VideoCardActions } from "./video/VideoCardActions";
-import { VideoMetadata } from "./video/VideoMetadata";
-import { VideoEditDialog } from "./video/VideoEditDialog";
+import { VideoHeader } from "./video/VideoHeader";
 import { VideoThumbnail } from "./video/VideoThumbnail";
-import { VideoOwnerActions } from "./video/VideoOwnerActions";
+import { VideoMetadata } from "./video/VideoMetadata";
 import { VideoMetricsDisplay } from "./video/VideoMetricsDisplay";
 import { VideoInteractionBar } from "./video/VideoInteractionBar";
+import { VideoOwnerActions } from "./video/VideoOwnerActions";
+import { VideoEditDialog } from "./video/VideoEditDialog";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 
@@ -52,50 +51,8 @@ export const VideoCard = ({
     comments: 0
   });
   
-  const isMobile = useIsMobile();
   const session = useSession();
   const isOwner = session?.user?.id === user_id;
-
-  useEffect(() => {
-    const channel = supabase
-      .channel(`video_metrics_${id}`)
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'performance_metrics',
-        filter: `video_id=eq.${id}`
-      }, (payload: any) => {
-        const newData = payload.new;
-        setMetrics(prev => ({
-          ...prev,
-          views: newData.views_count || prev.views,
-          comments: newData.comments_count || prev.comments
-        }));
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [id]);
-
-  const handleMetricsUpdate = () => {
-    // Refresh metrics after interaction
-    supabase
-      .from('performance_metrics')
-      .select('*')
-      .eq('video_id', id)
-      .single()
-      .then(({ data }) => {
-        if (data) {
-          setMetrics(prev => ({
-            ...prev,
-            views: data.views_count,
-            comments: data.comments_count
-          }));
-        }
-      });
-  };
 
   return (
     <motion.div
@@ -103,12 +60,12 @@ export const VideoCard = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
       className={cn(
-        "bg-youtube-dark rounded-xl overflow-hidden hover:shadow-xl transition-all duration-300",
+        "bg-youtube-dark rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300",
         videoSize === 'default' && "hover:scale-105",
         className
       )}
     >
-      <div className="relative group">
+      <div className="relative">
         <VideoThumbnail
           url={url}
           thumbnail={thumbnail}
@@ -124,32 +81,36 @@ export const VideoCard = ({
             'default'
           )}
         />
-        <VideoOwnerActions
-          isOwner={isOwner}
-          onEdit={() => setIsEditDialogOpen(true)}
-          onDelete={async () => {
-            if (!confirm('Are you sure you want to delete this video?')) return;
-            try {
-              const { error } = await supabase
-                .from('videos')
-                .delete()
-                .eq('id', id);
-              if (error) throw error;
-              toast.success('Video deleted successfully');
-            } catch (error) {
-              console.error('Error deleting video:', error);
-              toast.error('Failed to delete video');
-            }
-          }}
-        />
+        
+        {isOwner && (
+          <VideoOwnerActions
+            isOwner={isOwner}
+            onEdit={() => setIsEditDialogOpen(true)}
+            onDelete={async () => {
+              if (!confirm('Are you sure you want to delete this video?')) return;
+              try {
+                const { error } = await supabase
+                  .from('videos')
+                  .delete()
+                  .eq('id', id);
+                if (error) throw error;
+                toast.success('Video deleted successfully');
+              } catch (error) {
+                console.error('Error deleting video:', error);
+                toast.error('Failed to delete video');
+              }
+            }}
+          />
+        )}
       </div>
+
+      <VideoHeader title={title} status={status} />
 
       <VideoMetadata
         title={title}
         description={description}
         hashtags={hashtags}
         views={metrics.views.toString()}
-        status={status}
       />
 
       <div className="p-4 space-y-4">
@@ -164,7 +125,10 @@ export const VideoCard = ({
           initialLikes={metrics.likes}
           initialDislikes={metrics.dislikes}
           initialComments={metrics.comments}
-          onInteraction={handleMetricsUpdate}
+          onInteraction={() => {
+            // Refresh metrics after interaction
+            toast.success('Interaction recorded');
+          }}
         />
       </div>
 

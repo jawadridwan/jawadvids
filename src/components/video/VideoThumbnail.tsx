@@ -12,8 +12,8 @@ interface VideoThumbnailProps {
   videoSize: 'default' | 'medium' | 'fullscreen';
   isPlaying: boolean;
   onPlayStateChange: (isPlaying: boolean) => void;
-  onTimeUpdate: (currentTime: number, duration: number) => void;
   onVideoSizeChange: () => void;
+  onTimeUpdate?: (currentTime: number, duration: number) => void;
 }
 
 export const VideoThumbnail = ({
@@ -25,11 +25,11 @@ export const VideoThumbnail = ({
   videoSize,
   isPlaying,
   onPlayStateChange,
-  onTimeUpdate,
+  onTimeUpdate = () => {},
   onVideoSizeChange
 }: VideoThumbnailProps) => {
   return (
-    <div className="relative">
+    <div className="relative group">
       {url && status === 'ready' ? (
         <div className="relative">
           <EnhancedVideoPlayer
@@ -39,7 +39,7 @@ export const VideoThumbnail = ({
             onTimeUpdate={onTimeUpdate}
             onPlayStateChange={onPlayStateChange}
             className={cn(
-              "w-full",
+              "w-full transition-all duration-300",
               videoSize === 'medium' && "w-[854px] h-[480px]",
               videoSize === 'fullscreen' && "fixed inset-0 z-50 h-screen"
             )}
@@ -61,7 +61,7 @@ export const VideoThumbnail = ({
         <img 
           src={thumbnail || "/placeholder.svg"} 
           alt={title} 
-          className="w-full aspect-video object-cover"
+          className="w-full aspect-video object-cover rounded-t-xl"
         />
       )}
     </div>
