@@ -46,7 +46,7 @@ export const VideoCard = ({
   const [videoSize, setVideoSize] = useState<'default' | 'medium' | 'fullscreen'>('default');
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [metrics, setMetrics] = useState({
-    views: parseInt(views),
+    views: parseInt(views) || 0,
     likes,
     dislikes,
     comments: 0
@@ -54,6 +54,27 @@ export const VideoCard = ({
   
   const session = useSession();
   const isOwner = session?.user?.id === user_id;
+
+  // Track video view when played
+  const handleVideoPlay = async () => {
+    if (!session?.user?.id) return;
+    
+    try {
+      // Record the view
+      const { error: viewError } = await supabase
+        .from('views')
+        .insert({
+          video_id: id,
+          viewer_id: session.user.id,
+          watched_duration: 0,
+          watched_percentage: 0
+        });
+
+      if (viewError) throw viewError;
+    } catch (error) {
+      console.error('Error recording view:', error);
+    }
+  };
 
   // Subscribe to real-time view updates
   useEffect(() => {
@@ -69,11 +90,16 @@ export const VideoCard = ({
         },
         async () => {
           // Fetch updated view count
-          const { data: viewsData } = await supabase
+          const { data: viewsData, error } = await supabase
             .from('performance_metrics')
             .select('views_count')
             .eq('video_id', id)
             .single();
+          
+          if (error) {
+            console.error('Error fetching view count:', error);
+            return;
+          }
           
           if (viewsData) {
             setMetrics(prev => ({
@@ -84,6 +110,31 @@ export const VideoCard = ({
         }
       )
       .subscribe();
+
+    // Initial fetch of metrics
+    const fetchMetrics = async () => {
+      const { data, error } = await supabase
+        .from('performance_metrics')
+        .select('views_count, likes_count, comments_count')
+        .eq('video_id', id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching metrics:', error);
+        return;
+      }
+
+      if (data) {
+        setMetrics(prev => ({
+          ...prev,
+          views: data.views_count || 0,
+          likes: data.likes_count || 0,
+          comments: data.comments_count || 0
+        }));
+      }
+    };
+
+    fetchMetrics();
 
     return () => {
       supabase.removeChannel(channel);
@@ -129,7 +180,10 @@ export const VideoCard = ({
           videoId={id}
           videoSize={videoSize}
           isPlaying={isPlaying}
-          onPlayStateChange={setIsPlaying}
+          onPlayStateChange={(playing) => {
+            setIsPlaying(playing);
+            if (playing) handleVideoPlay();
+          }}
           onVideoSizeChange={() => setVideoSize(prev => 
             prev === 'default' ? 'medium' : 
             prev === 'medium' ? 'fullscreen' : 
