@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession } from "@supabase/auth-helpers-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
@@ -55,6 +55,41 @@ export const VideoCard = ({
   const session = useSession();
   const isOwner = session?.user?.id === user_id;
 
+  // Subscribe to real-time view updates
+  useEffect(() => {
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'views',
+          filter: `video_id=eq.${id}`
+        },
+        async () => {
+          // Fetch updated view count
+          const { data: viewsData } = await supabase
+            .from('performance_metrics')
+            .select('views_count')
+            .eq('video_id', id)
+            .single();
+          
+          if (viewsData) {
+            setMetrics(prev => ({
+              ...prev,
+              views: viewsData.views_count
+            }));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [id]);
+
   const handleDelete = async () => {
     if (!confirm('Are you sure you want to delete this video?')) return;
     try {
@@ -70,6 +105,10 @@ export const VideoCard = ({
     }
   };
 
+  // Default thumbnail if none provided
+  const defaultThumbnail = "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d";
+  const displayThumbnail = thumbnail || defaultThumbnail;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -84,7 +123,7 @@ export const VideoCard = ({
       <div className="relative">
         <VideoThumbnail
           url={url}
-          thumbnail={thumbnail}
+          thumbnail={displayThumbnail}
           title={title}
           status={status}
           videoId={id}
