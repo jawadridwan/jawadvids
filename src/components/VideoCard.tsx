@@ -11,6 +11,7 @@ import { VideoOwnerActions } from "./video/VideoOwnerActions";
 import { VideoEditDialog } from "./video/VideoEditDialog";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
 
 interface VideoCardProps {
   id: string;
@@ -54,6 +55,21 @@ export const VideoCard = ({
   const session = useSession();
   const isOwner = session?.user?.id === user_id;
 
+  const handleDelete = async () => {
+    if (!confirm('Are you sure you want to delete this video?')) return;
+    try {
+      const { error } = await supabase
+        .from('videos')
+        .delete()
+        .eq('id', id);
+      if (error) throw error;
+      toast.success('Video deleted successfully');
+    } catch (error) {
+      console.error('Error deleting video:', error);
+      toast.error('Failed to delete video');
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -86,20 +102,7 @@ export const VideoCard = ({
           <VideoOwnerActions
             isOwner={isOwner}
             onEdit={() => setIsEditDialogOpen(true)}
-            onDelete={async () => {
-              if (!confirm('Are you sure you want to delete this video?')) return;
-              try {
-                const { error } = await supabase
-                  .from('videos')
-                  .delete()
-                  .eq('id', id);
-                if (error) throw error;
-                toast.success('Video deleted successfully');
-              } catch (error) {
-                console.error('Error deleting video:', error);
-                toast.error('Failed to delete video');
-              }
-            }}
+            onDelete={handleDelete}
           />
         )}
       </div>
@@ -126,7 +129,6 @@ export const VideoCard = ({
           initialDislikes={metrics.dislikes}
           initialComments={metrics.comments}
           onInteraction={() => {
-            // Refresh metrics after interaction
             toast.success('Interaction recorded');
           }}
         />

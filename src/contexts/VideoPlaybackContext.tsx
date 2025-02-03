@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useRef, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from "@/integrations/supabase/client";
 
 interface VideoPlaybackContextType {
   registerVideo: (id: string, element: HTMLVideoElement) => void;
@@ -23,15 +23,15 @@ export const VideoPlaybackProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const handlePlay = async (id: string) => {
-    if (currentlyPlaying && currentlyPlaying !== id) {
-      const currentVideo = videoRefs.current.get(currentlyPlaying);
-      if (currentVideo) {
-        currentVideo.pause();
-      }
-    }
-    setCurrentlyPlaying(id);
-
     try {
+      if (currentlyPlaying && currentlyPlaying !== id) {
+        const currentVideo = videoRefs.current.get(currentlyPlaying);
+        if (currentVideo) {
+          currentVideo.pause();
+        }
+      }
+      setCurrentlyPlaying(id);
+
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         await supabase.from('views').insert({
