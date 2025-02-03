@@ -55,8 +55,8 @@ const Index = () => {
           </div>
 
           <div>
-            <h2 className="text-xl font-bold text-white mb-4">Your Videos</h2>
-            <VideoList videos={videos} setVideos={setVideos} />
+            <h2 className="text-xl font-bold text-white mb-4">Discover Videos</h2>
+            <VideoList videos={videos} setVideos={setVideos} showOnlyUserVideos={false} />
           </div>
         </div>
       </main>

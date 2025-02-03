@@ -94,7 +94,7 @@ export const VideoList = ({ videos: initialVideos, setVideos, showOnlyUserVideos
   if (!videos || videos.length === 0) {
     return (
       <div className="text-center text-gray-500 py-12">
-        No videos uploaded yet. Click the Upload Video button to get started.
+        No videos available. Click the Upload Video button to be the first!
       </div>
     );
   }
