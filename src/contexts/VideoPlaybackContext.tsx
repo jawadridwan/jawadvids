@@ -10,7 +10,7 @@ interface VideoPlaybackContextType {
 
 const VideoPlaybackContext = createContext<VideoPlaybackContextType | undefined>(undefined);
 
-export const VideoPlaybackProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const VideoPlaybackProvider = ({ children }: { children: React.ReactNode }) => {
   const videoRefs = useRef(new Map<string, HTMLVideoElement>());
   const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
 
