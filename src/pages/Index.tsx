@@ -62,9 +62,9 @@ const Index = () => {
   const sortedVideos = [...filteredVideos].sort((a, b) => {
     switch (sortBy) {
       case "popular":
-        return (b.engagement?.views || 0) - (a.engagement?.views || 0);
+        return ((b.engagement?.views || 0) - (a.engagement?.views || 0));
       case "trending":
-        return (b.engagement?.likes || 0) - (a.engagement?.likes || 0);
+        return ((b.engagement?.likes || 0) - (a.engagement?.likes || 0));
       default:
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     }

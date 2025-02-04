@@ -15,6 +15,12 @@ export interface Video {
   thumbnail_url: string | null;
   likes?: number;
   dislikes?: number;
+  engagement?: {
+    views: number;
+    likes: number;
+    comments: number;
+    shares: number;
+  };
 }
 
 export type VideoStatus = 'processing' | 'ready' | 'failed';
