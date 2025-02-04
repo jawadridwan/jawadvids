@@ -17,6 +17,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useQuery } from "@tanstack/react-query";
+
+interface Category {
+  id: string;
+  name: string;
+  description: string | null;
+}
 
 const Index = () => {
   const [videos, setVideos] = useState<Video[]>([]);
@@ -25,7 +32,21 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<"latest" | "popular" | "trending">("latest");
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const isMobile = useIsMobile();
+
+  const { data: categories = [] } = useQuery<Category[]>({
+    queryKey: ['categories'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .order('name');
+      
+      if (error) throw error;
+      return data;
+    }
+  });
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -53,11 +74,14 @@ const Index = () => {
     setIsDarkMode(!isDarkMode);
     document.documentElement.classList.toggle("dark");
     localStorage.setItem("darkMode", (!isDarkMode).toString());
+    toast.success(`Switched to ${!isDarkMode ? 'dark' : 'light'} mode`);
   };
 
-  const filteredVideos = videos.filter((video) =>
-    video.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredVideos = videos.filter((video) => {
+    const matchesSearch = video.title.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = !selectedCategory || video.category_id === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
 
   const sortedVideos = [...filteredVideos].sort((a, b) => {
     switch (sortBy) {
@@ -114,19 +138,42 @@ const Index = () => {
                 className="pl-10 bg-youtube-dark text-white border-none focus:ring-youtube-red"
               />
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="gap-2">
-                  <Filter className="h-4 w-4" />
-                  Sort by
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => setSortBy("latest")}>Latest</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSortBy("popular")}>Most viewed</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSortBy("trending")}>Trending</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="flex gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="gap-2">
+                    <Filter className="h-4 w-4" />
+                    Sort by
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={() => setSortBy("latest")}>Latest</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortBy("popular")}>Most viewed</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortBy("trending")}>Trending</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline">
+                    Categories
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={() => setSelectedCategory(null)}>
+                    All Categories
+                  </DropdownMenuItem>
+                  {categories.map((category) => (
+                    <DropdownMenuItem 
+                      key={category.id}
+                      onClick={() => setSelectedCategory(category.id)}
+                    >
+                      {category.name}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
 
           <div>

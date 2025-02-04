@@ -1,11 +1,13 @@
 import React, { useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { VideoControls } from './controls/VideoControls';
+import { VideoVolume } from './controls/VideoVolume';
+import { VideoPlaybackSpeed } from './controls/VideoPlaybackSpeed';
 import { useFullscreen } from './hooks/useFullscreen';
 import { useKeyboardControls } from './hooks/useKeyboardControls';
 import { useVideoState } from './hooks/useVideoState';
-import { VideoVolume } from './controls/VideoVolume';
-import { VideoPlaybackSpeed } from './controls/VideoPlaybackSpeed';
+import { VideoProgress } from './controls/VideoProgress';
+import { toast } from 'sonner';
 
 interface EnhancedVideoPlayerProps {
   url: string;
@@ -29,6 +31,8 @@ export const EnhancedVideoPlayer = ({
   const [showControls, setShowControls] = useState(true);
   const [volume, setVolume] = useState(1);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
   const [viewMode, setViewMode] = useState<'default' | 'medium' | 'fullscreen'>('default');
 
   const { isFullscreen, toggleFullscreen } = useFullscreen(containerRef);
@@ -37,13 +41,21 @@ export const EnhancedVideoPlayer = ({
   useKeyboardControls({
     videoRef,
     togglePlay,
-    toggleFullscreen
+    toggleFullscreen,
+    skip: (seconds: number) => {
+      if (videoRef.current) {
+        videoRef.current.currentTime = Math.max(0, Math.min(videoRef.current.currentTime + seconds, videoRef.current.duration));
+        toast.success(`Skipped ${seconds > 0 ? 'forward' : 'backward'} ${Math.abs(seconds)} seconds`);
+      }
+    }
   });
 
   const handleTimeUpdate = () => {
     const video = videoRef.current;
-    if (video && onTimeUpdate) {
-      onTimeUpdate(video.currentTime, video.duration);
+    if (video) {
+      setCurrentTime(video.currentTime);
+      setDuration(video.duration);
+      onTimeUpdate?.(video.currentTime, video.duration);
     }
   };
 
@@ -60,6 +72,14 @@ export const EnhancedVideoPlayer = ({
       videoRef.current.playbackRate = speed;
       setPlaybackSpeed(speed);
     }
+  };
+
+  const handleSeek = (value: number[]) => {
+    const video = videoRef.current;
+    if (!video) return;
+    const newTime = (value[0] / 100) * duration;
+    video.currentTime = newTime;
+    setCurrentTime(newTime);
   };
 
   return (
@@ -93,6 +113,12 @@ export const EnhancedVideoPlayer = ({
             <source src={url} type="video/mp4" />
             Your browser does not support the video tag.
           </video>
+
+          <VideoProgress
+            currentTime={currentTime}
+            duration={duration}
+            onSeek={handleSeek}
+          />
 
           <VideoControls
             isPlaying={isPlaying}

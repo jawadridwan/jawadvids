@@ -13,6 +13,7 @@ import { VideoTags } from "./video/VideoTags";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 
 interface VideoCardProps {
   id: string;
@@ -27,6 +28,7 @@ interface VideoCardProps {
   likes?: number;
   dislikes?: number;
   user_id: string;
+  category_id?: string;
 }
 
 export const VideoCard = ({ 
@@ -41,7 +43,8 @@ export const VideoCard = ({
   url,
   likes = 0,
   dislikes = 0,
-  user_id
+  user_id,
+  category_id
 }: VideoCardProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [videoSize, setVideoSize] = useState<'default' | 'medium' | 'fullscreen'>('default');
@@ -55,6 +58,22 @@ export const VideoCard = ({
   
   const session = useSession();
   const isOwner = session?.user?.id === user_id;
+
+  const { data: category } = useQuery({
+    queryKey: ['category', category_id],
+    queryFn: async () => {
+      if (!category_id) return null;
+      const { data, error } = await supabase
+        .from('categories')
+        .select('name')
+        .eq('id', category_id)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!category_id
+  });
 
   const handleVideoPlay = async () => {
     if (!session?.user?.id) return;
@@ -198,7 +217,17 @@ export const VideoCard = ({
 
       <VideoHeader title={title} status={status} />
       
-      <VideoTags hashtags={hashtags} onTagClick={handleTagClick} />
+      {category && (
+        <div className="px-4 py-1">
+          <span className="text-sm text-youtube-gray bg-youtube-dark/50 px-2 py-1 rounded">
+            {category.name}
+          </span>
+        </div>
+      )}
+
+      <VideoTags hashtags={hashtags} onTagClick={(tag) => {
+        toast.info(`Filtering by tag: ${tag}`);
+      }} />
 
       <VideoMetadata
         title={title}

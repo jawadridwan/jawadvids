@@ -39,6 +39,27 @@ export type Database = {
         }
         Relationships: []
       }
+      categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       comment_reactions: {
         Row: {
           comment_id: string | null
@@ -420,6 +441,7 @@ export type Database = {
       videos: {
         Row: {
           available_qualities: Json | null
+          category_id: string | null
           created_at: string | null
           default_quality: string | null
           description: string | null
@@ -432,6 +454,7 @@ export type Database = {
         }
         Insert: {
           available_qualities?: Json | null
+          category_id?: string | null
           created_at?: string | null
           default_quality?: string | null
           description?: string | null
@@ -444,6 +467,7 @@ export type Database = {
         }
         Update: {
           available_qualities?: Json | null
+          category_id?: string | null
           created_at?: string | null
           default_quality?: string | null
           description?: string | null
@@ -454,7 +478,15 @@ export type Database = {
           url?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "videos_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       views: {
         Row: {

@@ -15,6 +15,7 @@ export interface Video {
   thumbnail_url: string | null;
   likes?: number;
   dislikes?: number;
+  category_id?: string;
   engagement?: {
     views: number;
     likes: number;
