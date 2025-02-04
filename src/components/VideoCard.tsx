@@ -9,6 +9,7 @@ import { VideoMetricsDisplay } from "./video/VideoMetricsDisplay";
 import { VideoInteractionBar } from "./video/VideoInteractionBar";
 import { VideoOwnerActions } from "./video/VideoOwnerActions";
 import { VideoEditDialog } from "./video/VideoEditDialog";
+import { VideoTags } from "./video/VideoTags";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,7 +35,7 @@ export const VideoCard = ({
   views, 
   thumbnail, 
   description, 
-  hashtags, 
+  hashtags = [], 
   status,
   className,
   url,
@@ -55,12 +56,10 @@ export const VideoCard = ({
   const session = useSession();
   const isOwner = session?.user?.id === user_id;
 
-  // Track video view when played
   const handleVideoPlay = async () => {
     if (!session?.user?.id) return;
     
     try {
-      // Record the view
       const { error: viewError } = await supabase
         .from('views')
         .insert({
@@ -76,7 +75,6 @@ export const VideoCard = ({
     }
   };
 
-  // Subscribe to real-time view updates
   useEffect(() => {
     const channel = supabase
       .channel('schema-db-changes')
@@ -89,7 +87,6 @@ export const VideoCard = ({
           filter: `video_id=eq.${id}`
         },
         async () => {
-          // Fetch updated view count
           const { data: viewsData, error } = await supabase
             .from('performance_metrics')
             .select('views_count')
@@ -111,7 +108,6 @@ export const VideoCard = ({
       )
       .subscribe();
 
-    // Initial fetch of metrics
     const fetchMetrics = async () => {
       const { data, error } = await supabase
         .from('performance_metrics')
@@ -141,24 +137,10 @@ export const VideoCard = ({
     };
   }, [id]);
 
-  const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this video?')) return;
-    try {
-      const { error } = await supabase
-        .from('videos')
-        .delete()
-        .eq('id', id);
-      if (error) throw error;
-      toast.success('Video deleted successfully');
-    } catch (error) {
-      console.error('Error deleting video:', error);
-      toast.error('Failed to delete video');
-    }
+  const handleTagClick = (tag: string) => {
+    toast.info(`Filtering by tag: ${tag}`);
+    // Implement tag filtering logic here
   };
-
-  // Default thumbnail if none provided
-  const defaultThumbnail = "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d";
-  const displayThumbnail = thumbnail || defaultThumbnail;
 
   return (
     <motion.div
@@ -167,6 +149,7 @@ export const VideoCard = ({
       transition={{ duration: 0.3 }}
       className={cn(
         "bg-youtube-dark rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300",
+        "group hover:scale-[1.02] hover:ring-2 hover:ring-youtube-red/20",
         videoSize === 'default' && "hover:scale-105",
         className
       )}
@@ -174,7 +157,7 @@ export const VideoCard = ({
       <div className="relative">
         <VideoThumbnail
           url={url}
-          thumbnail={displayThumbnail}
+          thumbnail={thumbnail}
           title={title}
           status={status}
           videoId={id}
@@ -195,12 +178,27 @@ export const VideoCard = ({
           <VideoOwnerActions
             isOwner={isOwner}
             onEdit={() => setIsEditDialogOpen(true)}
-            onDelete={handleDelete}
+            onDelete={async () => {
+              if (!confirm('Are you sure you want to delete this video?')) return;
+              try {
+                const { error } = await supabase
+                  .from('videos')
+                  .delete()
+                  .eq('id', id);
+                if (error) throw error;
+                toast.success('Video deleted successfully');
+              } catch (error) {
+                console.error('Error deleting video:', error);
+                toast.error('Failed to delete video');
+              }
+            }}
           />
         )}
       </div>
 
       <VideoHeader title={title} status={status} />
+      
+      <VideoTags hashtags={hashtags} onTagClick={handleTagClick} />
 
       <VideoMetadata
         title={title}

@@ -77,6 +77,10 @@ export default {
           "0%": { transform: "scale(0.95)", opacity: "0" },
           "100%": { transform: "scale(1)", opacity: "1" },
         },
+        "scale-hover": {
+          "0%": { transform: "scale(1)" },
+          "100%": { transform: "scale(1.05)" },
+        },
         "hue-rotate": {
           "100%": { filter: "hue-rotate(360deg)" },
         },
@@ -86,6 +90,7 @@ export default {
         "slide-in": "slide-in 0.5s ease-out",
         "slide-up": "slide-up 0.5s ease-out",
         "scale-in": "scale-in 0.3s ease-out",
+        "scale-hover": "scale-hover 0.3s ease-out",
         "hue-rotate": "hue-rotate 1s linear infinite",
       },
       backgroundImage: {
