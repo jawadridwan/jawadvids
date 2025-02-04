@@ -12,10 +12,16 @@ export const useVideoUpload = (onUploadComplete: (videoData: any) => void) => {
     description: string,
     thumbnail: File | null,
     hashtags: string[],
-    visibility: string
+    visibility: string,
+    categoryId: string
   ) => {
     if (!title.trim()) {
       toast.error("Please enter a title for your video.");
+      return false;
+    }
+
+    if (!categoryId) {
+      toast.error("Please select a category for your video.");
       return false;
     }
 
@@ -40,12 +46,14 @@ export const useVideoUpload = (onUploadComplete: (videoData: any) => void) => {
       formData.append('title', title);
       formData.append('description', description || '');
       formData.append('userId', user.id);
+      formData.append('categoryId', categoryId);
 
       console.log('Invoking upload-video function with:', {
         title,
         description: description ? 'present' : 'not present',
         userId: user.id,
-        videoName: video.name
+        videoName: video.name,
+        categoryId
       });
 
       try {

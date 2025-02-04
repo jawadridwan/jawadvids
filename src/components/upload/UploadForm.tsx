@@ -8,6 +8,7 @@ import { VisibilitySelect } from "./VisibilitySelect";
 import { Progress } from "../ui/progress";
 import { VideoUploadField } from "./VideoUploadField";
 import { useVideoUpload } from "./useVideoUpload";
+import { CategorySelect } from "./CategorySelect";
 
 interface UploadFormProps {
   onUploadComplete: (videoData: any) => void;
@@ -21,6 +22,7 @@ export const UploadForm = ({ onUploadComplete, onClose }: UploadFormProps) => {
   const [visibility, setVisibility] = useState("public");
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [video, setVideo] = useState<File | null>(null);
+  const [categoryId, setCategoryId] = useState("");
 
   const { uploadVideo, uploading, progress } = useVideoUpload(onUploadComplete);
 
@@ -34,7 +36,8 @@ export const UploadForm = ({ onUploadComplete, onClose }: UploadFormProps) => {
       description,
       thumbnail,
       hashtags,
-      visibility
+      visibility,
+      categoryId
     );
 
     if (success) {
@@ -59,6 +62,12 @@ export const UploadForm = ({ onUploadComplete, onClose }: UploadFormProps) => {
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           maxLength={5000}
+          disabled={uploading}
+        />
+
+        <CategorySelect
+          value={categoryId}
+          onChange={setCategoryId}
           disabled={uploading}
         />
 
@@ -104,7 +113,10 @@ export const UploadForm = ({ onUploadComplete, onClose }: UploadFormProps) => {
         <Button type="button" variant="outline" onClick={onClose} disabled={uploading}>
           Cancel
         </Button>
-        <Button type="submit" disabled={uploading || !title || !video}>
+        <Button 
+          type="submit" 
+          disabled={uploading || !title || !video || !categoryId}
+        >
           {uploading ? "Uploading..." : "Upload Video"}
         </Button>
       </div>
