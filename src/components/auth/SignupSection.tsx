@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -37,8 +38,6 @@ export const SignupSection = ({ onSignInClick }: SignupSectionProps) => {
 
   return (
     <form onSubmit={handleSignUp} className="flex flex-col items-center w-full">
-      <h2 className="text-3xl text-white text-center mb-8">Sign Up</h2>
-
       <div className="relative w-full mb-8 border-b-2 border-white group">
         <input
           type="email"
