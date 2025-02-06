@@ -1,4 +1,3 @@
-
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -19,9 +18,11 @@ export const VideoContainer = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
       className={cn(
-        "bg-youtube-dark rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300",
-        "group hover:ring-2 hover:ring-youtube-red/20",
-        videoSize === 'default' && "w-full max-w-2xl mx-auto",
+        "bg-youtube-dark rounded-xl overflow-hidden shadow-lg transition-all duration-300",
+        "max-w-full mx-auto",
+        videoSize === 'default' && "w-full md:max-w-2xl",
+        videoSize === 'medium' && "w-full md:max-w-4xl",
+        videoSize === 'fullscreen' && "fixed inset-0 z-50",
         className
       )}
     >

@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Maximize2, Minimize2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -30,9 +29,9 @@ export const VideoThumbnail = ({
   onVideoSizeChange
 }: VideoThumbnailProps) => {
   return (
-    <div className="relative group w-full max-w-4xl mx-auto">
+    <div className="relative w-full aspect-video">
       {url && status === 'ready' ? (
-        <div className="relative w-full">
+        <div className="relative w-full h-full">
           <EnhancedVideoPlayer
             videoId={videoId}
             url={url}
@@ -40,9 +39,8 @@ export const VideoThumbnail = ({
             onTimeUpdate={onTimeUpdate}
             onPlayStateChange={onPlayStateChange}
             className={cn(
-              "w-full transition-all duration-300 rounded-lg shadow-lg",
-              videoSize === 'medium' && "max-w-[854px] aspect-video mx-auto",
-              videoSize === 'fullscreen' && "fixed inset-0 z-50 h-screen w-screen"
+              "w-full h-full transition-all duration-300 rounded-lg",
+              videoSize === 'fullscreen' && "fixed inset-0 z-50"
             )}
           />
           <Button
@@ -59,7 +57,7 @@ export const VideoThumbnail = ({
           </Button>
         </div>
       ) : (
-        <div className="relative w-full aspect-video rounded-lg overflow-hidden">
+        <div className="relative w-full h-full rounded-lg overflow-hidden">
           <img 
             src={thumbnail || "/placeholder.svg"} 
             alt={title} 
