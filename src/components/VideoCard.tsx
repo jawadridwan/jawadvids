@@ -168,8 +168,8 @@ export const VideoCard = ({
       transition={{ duration: 0.3 }}
       className={cn(
         "bg-youtube-dark rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300",
-        "group hover:scale-[1.02] hover:ring-2 hover:ring-youtube-red/20",
-        videoSize === 'default' && "hover:scale-105",
+        "group hover:ring-2 hover:ring-youtube-red/20",
+        videoSize === 'default' && "w-full max-w-2xl mx-auto",
         className
       )}
     >

@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Maximize2, Minimize2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -29,9 +30,9 @@ export const VideoThumbnail = ({
   onVideoSizeChange
 }: VideoThumbnailProps) => {
   return (
-    <div className="relative group">
+    <div className="relative group w-full max-w-4xl mx-auto">
       {url && status === 'ready' ? (
-        <div className="relative">
+        <div className="relative w-full">
           <EnhancedVideoPlayer
             videoId={videoId}
             url={url}
@@ -39,9 +40,9 @@ export const VideoThumbnail = ({
             onTimeUpdate={onTimeUpdate}
             onPlayStateChange={onPlayStateChange}
             className={cn(
-              "w-full transition-all duration-300",
-              videoSize === 'medium' && "w-[854px] h-[480px]",
-              videoSize === 'fullscreen' && "fixed inset-0 z-50 h-screen"
+              "w-full transition-all duration-300 rounded-lg shadow-lg",
+              videoSize === 'medium' && "max-w-[854px] aspect-video mx-auto",
+              videoSize === 'fullscreen' && "fixed inset-0 z-50 h-screen w-screen"
             )}
           />
           <Button
@@ -58,11 +59,14 @@ export const VideoThumbnail = ({
           </Button>
         </div>
       ) : (
-        <img 
-          src={thumbnail || "/placeholder.svg"} 
-          alt={title} 
-          className="w-full aspect-video object-cover rounded-t-xl"
-        />
+        <div className="relative w-full aspect-video rounded-lg overflow-hidden">
+          <img 
+            src={thumbnail || "/placeholder.svg"} 
+            alt={title} 
+            className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+          />
+          <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors" />
+        </div>
       )}
     </div>
   );
