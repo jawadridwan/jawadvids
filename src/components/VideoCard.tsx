@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useSession } from "@supabase/auth-helpers-react";
 import { toast } from "sonner";
 import { VideoHeader } from "./video/VideoHeader";
@@ -7,12 +7,11 @@ import { VideoThumbnail } from "./video/VideoThumbnail";
 import { VideoMetadata } from "./video/VideoMetadata";
 import { VideoOwnerActions } from "./video/VideoOwnerActions";
 import { VideoEditDialog } from "./video/VideoEditDialog";
-import { VideoTags } from "./video/VideoTags";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { ThumbsUp, Share2 } from "lucide-react";
+import { ThumbsUp } from "lucide-react";
 import { Button } from "./ui/button";
 
 interface VideoCardProps {
@@ -127,24 +126,15 @@ export const VideoCard = ({
     }
   };
 
-  const handleShare = async () => {
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-      toast.success('Video link copied to clipboard');
-    } catch (error) {
-      toast.error('Failed to copy link');
-    }
-  };
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
       className={cn(
-        "bg-gradient-to-br from-youtube-dark/80 to-youtube-dark rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300",
-        "backdrop-blur-sm border border-white/5",
-        videoSize === 'default' && "hover:scale-102",
+        "bg-gradient-to-br from-youtube-dark/80 to-youtube-dark rounded-lg overflow-hidden shadow-lg",
+        "backdrop-blur-sm border border-white/5 max-w-sm mx-auto",
+        videoSize === 'default' && "hover:scale-102 transition-transform duration-300",
         className
       )}
     >
@@ -193,16 +183,12 @@ export const VideoCard = ({
       <VideoHeader title={title} status={status} />
       
       {category && (
-        <div className="px-4 py-1">
-          <span className="text-sm text-youtube-gray bg-youtube-dark/50 px-2 py-1 rounded-full">
+        <div className="px-3 py-1">
+          <span className="text-xs text-youtube-gray bg-youtube-dark/50 px-2 py-0.5 rounded-full">
             {category.name}
           </span>
         </div>
       )}
-
-      <VideoTags hashtags={hashtags} onTagClick={(tag) => {
-        toast.info(`Filtering by tag: ${tag}`);
-      }} />
 
       <VideoMetadata
         title={title}
@@ -211,7 +197,7 @@ export const VideoCard = ({
         status={status}
       />
 
-      <div className="px-4 pb-4 flex justify-between items-center">
+      <div className="px-3 pb-3">
         <Button
           variant="ghost"
           size="sm"
@@ -219,16 +205,7 @@ export const VideoCard = ({
           onClick={handleLike}
         >
           <ThumbsUp className="w-4 h-4" />
-          <span>{metrics.likes}</span>
-        </Button>
-
-        <Button
-          variant="ghost"
-          size="sm"
-          className="text-youtube-gray hover:text-white"
-          onClick={handleShare}
-        >
-          <Share2 className="w-4 h-4" />
+          <span className="text-sm">{metrics.likes}</span>
         </Button>
       </div>
 
