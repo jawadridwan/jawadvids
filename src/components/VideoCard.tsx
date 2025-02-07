@@ -7,27 +7,12 @@ import { VideoThumbnail } from "./video/VideoThumbnail";
 import { VideoMetadata } from "./video/VideoMetadata";
 import { VideoOwnerActions } from "./video/VideoOwnerActions";
 import { VideoEditDialog } from "./video/VideoEditDialog";
+import { VideoMetrics } from "./video/VideoMetrics";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { ThumbsUp } from "lucide-react";
-import { Button } from "./ui/button";
-
-interface VideoCardProps {
-  id: string;
-  title: string;
-  views: string;
-  thumbnail: string;
-  description?: string;
-  hashtags?: string[];
-  status?: 'processing' | 'ready' | 'failed';
-  className?: string;
-  url?: string;
-  likes?: number;
-  user_id: string;
-  category_id?: string;
-}
+import { VideoCardProps } from "@/types/video-card";
 
 export const VideoCard = ({ 
   id,
@@ -197,17 +182,7 @@ export const VideoCard = ({
         status={status}
       />
 
-      <div className="px-3 pb-3">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="text-youtube-gray hover:text-white flex items-center gap-2"
-          onClick={handleLike}
-        >
-          <ThumbsUp className="w-4 h-4" />
-          <span className="text-sm">{metrics.likes}</span>
-        </Button>
-      </div>
+      <VideoMetrics likes={metrics.likes} onLike={handleLike} />
 
       <VideoEditDialog
         id={id}
