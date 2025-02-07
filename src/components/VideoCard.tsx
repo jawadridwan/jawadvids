@@ -1,22 +1,40 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession } from "@supabase/auth-helpers-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 import { VideoHeader } from "./video/VideoHeader";
 import { VideoThumbnail } from "./video/VideoThumbnail";
 import { VideoMetadata } from "./video/VideoMetadata";
+import { VideoMetricsDisplay } from "./video/VideoMetricsDisplay";
+import { VideoInteractionBar } from "./video/VideoInteractionBar";
 import { VideoOwnerActions } from "./video/VideoOwnerActions";
 import { VideoEditDialog } from "./video/VideoEditDialog";
-import { VideoMetrics } from "./video/VideoMetrics";
+import { VideoTags } from "./video/VideoTags";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { VideoCardProps } from "@/types/video-card";
+
+interface VideoCardProps {
+  id: string;
+  title: string;
+  views: string;
+  thumbnail: string;
+  description?: string;
+  hashtags?: string[];
+  status?: 'processing' | 'ready' | 'failed';
+  className?: string;
+  url?: string;
+  likes?: number;
+  dislikes?: number;
+  user_id: string;
+  category_id?: string;
+}
 
 export const VideoCard = ({ 
   id,
   title, 
+  views, 
   thumbnail, 
   description, 
   hashtags = [], 
@@ -24,6 +42,7 @@ export const VideoCard = ({
   className,
   url,
   likes = 0,
+  dislikes = 0,
   user_id,
   category_id
 }: VideoCardProps) => {
@@ -31,7 +50,10 @@ export const VideoCard = ({
   const [videoSize, setVideoSize] = useState<'default' | 'medium' | 'fullscreen'>('default');
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [metrics, setMetrics] = useState({
+    views: parseInt(views) || 0,
     likes,
+    dislikes,
+    comments: 0
   });
   
   const session = useSession();
@@ -72,43 +94,71 @@ export const VideoCard = ({
     }
   };
 
-  const handleLike = async () => {
-    if (!session?.user?.id) {
-      toast.error('Please sign in to like videos');
-      return;
-    }
+  useEffect(() => {
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'views',
+          filter: `video_id=eq.${id}`
+        },
+        async () => {
+          const { data: viewsData, error } = await supabase
+            .from('performance_metrics')
+            .select('views_count')
+            .eq('video_id', id)
+            .single();
+          
+          if (error) {
+            console.error('Error fetching view count:', error);
+            return;
+          }
+          
+          if (viewsData) {
+            setMetrics(prev => ({
+              ...prev,
+              views: viewsData.views_count
+            }));
+          }
+        }
+      )
+      .subscribe();
 
-    try {
-      const { data: existingLike } = await supabase
-        .from('reactions')
-        .select()
+    const fetchMetrics = async () => {
+      const { data, error } = await supabase
+        .from('performance_metrics')
+        .select('views_count, likes_count, comments_count')
         .eq('video_id', id)
-        .eq('user_id', session.user.id)
-        .eq('type', 'like')
         .single();
 
-      if (existingLike) {
-        await supabase
-          .from('reactions')
-          .delete()
-          .eq('id', existingLike.id);
-        setMetrics(prev => ({ ...prev, likes: prev.likes - 1 }));
-      } else {
-        await supabase
-          .from('reactions')
-          .insert({ 
-            video_id: id,
-            user_id: session.user.id,
-            type: 'like'
-          });
-        setMetrics(prev => ({ ...prev, likes: prev.likes + 1 }));
+      if (error) {
+        console.error('Error fetching metrics:', error);
+        return;
       }
-      
-      toast.success('Reaction updated');
-    } catch (error) {
-      console.error('Error handling reaction:', error);
-      toast.error('Failed to update reaction');
-    }
+
+      if (data) {
+        setMetrics(prev => ({
+          ...prev,
+          views: data.views_count || 0,
+          likes: data.likes_count || 0,
+          comments: data.comments_count || 0
+        }));
+      }
+    };
+
+    fetchMetrics();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [id]);
+
+  const handleTagClick = (tag: string) => {
+    toast.info(`Filtering by tag: ${tag}`);
+    // Implement tag filtering logic here
   };
 
   return (
@@ -117,9 +167,9 @@ export const VideoCard = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
       className={cn(
-        "bg-gradient-to-br from-youtube-dark/80 to-youtube-dark rounded-lg overflow-hidden shadow-lg",
-        "backdrop-blur-sm border border-white/5 max-w-sm mx-auto",
-        videoSize === 'default' && "hover:scale-102 transition-transform duration-300",
+        "bg-youtube-dark rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300",
+        "group hover:scale-[1.02] hover:ring-2 hover:ring-youtube-red/20",
+        videoSize === 'default' && "hover:scale-105",
         className
       )}
     >
@@ -168,21 +218,41 @@ export const VideoCard = ({
       <VideoHeader title={title} status={status} />
       
       {category && (
-        <div className="px-3 py-1">
-          <span className="text-xs text-youtube-gray bg-youtube-dark/50 px-2 py-0.5 rounded-full">
+        <div className="px-4 py-1">
+          <span className="text-sm text-youtube-gray bg-youtube-dark/50 px-2 py-1 rounded">
             {category.name}
           </span>
         </div>
       )}
 
+      <VideoTags hashtags={hashtags} onTagClick={(tag) => {
+        toast.info(`Filtering by tag: ${tag}`);
+      }} />
+
       <VideoMetadata
         title={title}
         description={description}
         hashtags={hashtags}
-        status={status}
+        views={metrics.views.toString()}
       />
 
-      <VideoMetrics likes={metrics.likes} onLike={handleLike} />
+      <div className="p-4 space-y-4">
+        <VideoMetricsDisplay
+          views={metrics.views}
+          likes={metrics.likes}
+          comments={metrics.comments}
+        />
+        
+        <VideoInteractionBar
+          videoId={id}
+          initialLikes={metrics.likes}
+          initialDislikes={metrics.dislikes}
+          initialComments={metrics.comments}
+          onInteraction={() => {
+            toast.success('Interaction recorded');
+          }}
+        />
+      </div>
 
       <VideoEditDialog
         id={id}

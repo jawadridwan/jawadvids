@@ -1,4 +1,3 @@
-
 import { VideoCard } from "./VideoCard";
 import { VideoActions } from "./video/VideoActions";
 import { useQuery } from "@tanstack/react-query";
@@ -20,6 +19,7 @@ export const VideoList = ({ videos: initialVideos, setVideos, showOnlyUserVideos
     queryKey: ['videos', showOnlyUserVideos],
     queryFn: async () => {
       try {
+        console.log('Fetching videos from Supabase');
         let query = supabase
           .from('videos')
           .select(`
@@ -66,6 +66,7 @@ export const VideoList = ({ videos: initialVideos, setVideos, showOnlyUserVideos
           thumbnail_url: video.thumbnail_url,
           url: video.url,
           likes: video.reactions?.filter((r: any) => r.type === 'like').length || 0,
+          dislikes: video.reactions?.filter((r: any) => r.type === 'dislike').length || 0,
           engagement: {
             views: video.performance_metrics?.[0]?.views_count || 0,
             likes: video.performance_metrics?.[0]?.likes_count || 0,
@@ -99,7 +100,7 @@ export const VideoList = ({ videos: initialVideos, setVideos, showOnlyUserVideos
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {videos.map((video) => (
         <div key={video.id} className="relative group">
           <VideoCard
@@ -112,6 +113,7 @@ export const VideoList = ({ videos: initialVideos, setVideos, showOnlyUserVideos
             status={video.status}
             url={video.url}
             likes={video.likes}
+            dislikes={video.dislikes}
             user_id={video.user_id}
           />
           <VideoActions video={video} onDelete={refetch} />
