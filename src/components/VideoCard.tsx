@@ -1,19 +1,16 @@
-import { useState, useEffect } from "react";
+
+import { useState } from "react";
 import { useSession } from "@supabase/auth-helpers-react";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { toast } from "sonner";
-import { VideoHeader } from "./video/VideoHeader";
+import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
+import { useVideoMetrics } from "@/hooks/use-video-metrics";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { VideoThumbnail } from "./video/VideoThumbnail";
-import { VideoMetadata } from "./video/VideoMetadata";
-import { VideoMetricsDisplay } from "./video/VideoMetricsDisplay";
-import { VideoInteractionBar } from "./video/VideoInteractionBar";
+import { VideoContent } from "./video/VideoContent";
 import { VideoOwnerActions } from "./video/VideoOwnerActions";
 import { VideoEditDialog } from "./video/VideoEditDialog";
-import { VideoTags } from "./video/VideoTags";
-import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 interface VideoCardProps {
   id: string;
@@ -49,15 +46,11 @@ export const VideoCard = ({
   const [isPlaying, setIsPlaying] = useState(false);
   const [videoSize, setVideoSize] = useState<'default' | 'medium' | 'fullscreen'>('default');
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [metrics, setMetrics] = useState({
-    views: parseInt(views) || 0,
-    likes,
-    dislikes,
-    comments: 0
-  });
   
   const session = useSession();
   const isOwner = session?.user?.id === user_id;
+
+  const { metrics, handleVideoPlay } = useVideoMetrics(id, views, likes, dislikes);
 
   const { data: category } = useQuery({
     queryKey: ['category', category_id],
@@ -74,74 +67,6 @@ export const VideoCard = ({
     },
     enabled: !!category_id
   });
-
-  const handleVideoPlay = async () => {
-    if (!session?.user?.id) return;
-    
-    try {
-      const { error: viewError } = await supabase
-        .from('views')
-        .insert({
-          video_id: id,
-          viewer_id: session.user.id,
-          watched_duration: 0,
-          watched_percentage: 0
-        });
-
-      if (viewError) throw viewError;
-      
-      // Update local view count immediately
-      setMetrics(prev => ({
-        ...prev,
-        views: prev.views + 1
-      }));
-    } catch (error) {
-      console.error('Error recording view:', error);
-    }
-  };
-
-  useEffect(() => {
-    const channel = supabase
-      .channel('schema-db-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'views',
-          filter: `video_id=eq.${id}`
-        },
-        async () => {
-          const { data: viewsData, error } = await supabase
-            .from('performance_metrics')
-            .select('views_count')
-            .eq('video_id', id)
-            .single();
-          
-          if (error) {
-            console.error('Error fetching view count:', error);
-            return;
-          }
-          
-          if (viewsData) {
-            setMetrics(prev => ({
-              ...prev,
-              views: viewsData.views_count
-            }));
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [id]);
-
-  const handleTagClick = (tag: string) => {
-    toast.info(`Filtering by tag: ${tag}`);
-    // Implement tag filtering logic here
-  };
 
   return (
     <motion.div
@@ -166,7 +91,7 @@ export const VideoCard = ({
           isPlaying={isPlaying}
           onPlayStateChange={(playing) => {
             setIsPlaying(playing);
-            if (playing) handleVideoPlay();
+            if (playing) handleVideoPlay(session?.user?.id);
           }}
           onVideoSizeChange={() => setVideoSize(prev => 
             prev === 'default' ? 'medium' : 
@@ -197,46 +122,18 @@ export const VideoCard = ({
         )}
       </div>
 
-      <VideoHeader title={title} status={status} />
-      
-      {category && (
-        <div className="px-4 py-1">
-          <span className="text-sm text-youtube-gray bg-youtube-dark/50 px-2 py-1 rounded">
-            {category.name}
-          </span>
-        </div>
-      )}
-
-      <VideoTags hashtags={hashtags} onTagClick={(tag) => {
-        toast.info(`Filtering by tag: ${tag}`);
-      }} />
-
-      <VideoMetadata
+      <VideoContent
         title={title}
         description={description}
         hashtags={hashtags}
-        views={metrics.views.toString()}
-        showTitle={false}
-        showViews={false}
+        metrics={metrics}
+        status={status}
+        videoId={id}
+        category={category}
+        onInteraction={() => {
+          toast.success('Interaction recorded');
+        }}
       />
-
-      <div className="p-4 space-y-4">
-        <VideoMetricsDisplay
-          views={metrics.views}
-          likes={metrics.likes}
-          comments={metrics.comments}
-        />
-        
-        <VideoInteractionBar
-          videoId={id}
-          initialLikes={metrics.likes}
-          initialDislikes={metrics.dislikes}
-          initialComments={metrics.comments}
-          onInteraction={() => {
-            toast.success('Interaction recorded');
-          }}
-        />
-      </div>
 
       <VideoEditDialog
         id={id}
