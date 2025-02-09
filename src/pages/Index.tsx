@@ -18,6 +18,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useQuery } from "@tanstack/react-query";
+import { motion } from "framer-motion";
 
 interface Category {
   id: string;
@@ -107,12 +108,16 @@ const Index = () => {
   }
 
   return (
-    <div className="flex flex-col md:flex-row bg-youtube-darker min-h-screen touch-pan-y">
+    <div className="flex flex-col md:flex-row bg-gradient-to-br from-youtube-darker via-[#1a1a2e] to-youtube-darker min-h-screen touch-pan-y">
       <Sidebar />
       <main className="flex-1 p-4 md:p-8 overflow-auto">
         <div className="max-w-7xl mx-auto space-y-8">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <h1 className="text-2xl md:text-3xl font-bold text-white text-center md:text-left">
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col md:flex-row justify-between items-center gap-4"
+          >
+            <h1 className="text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600 text-center md:text-left">
               Dashboard
             </h1>
             <div className="flex items-center gap-4">
@@ -120,33 +125,48 @@ const Index = () => {
                 variant="ghost"
                 size="icon"
                 onClick={toggleDarkMode}
-                className="text-white hover:text-youtube-red"
+                className="text-white hover:text-youtube-red relative overflow-hidden group"
               >
-                <SunMoon className="h-5 w-5" />
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20 opacity-0 group-hover:opacity-100 transition-opacity"
+                  animate={{
+                    scale: [1, 1.2, 1],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                  }}
+                />
+                <SunMoon className="h-5 w-5 relative z-10" />
               </Button>
               <VideoUploadDialog onUploadComplete={(video) => setVideos([...videos, video])} />
             </div>
-          </div>
+          </motion.div>
 
-          <div className="flex flex-col md:flex-row gap-4 items-center">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="flex flex-col md:flex-row gap-4 items-center"
+          >
+            <div className="relative flex-1 group">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 group-hover:text-purple-400 transition-colors" />
               <Input
                 placeholder="Search videos..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-youtube-dark text-white border-none focus:ring-youtube-red"
+                className="pl-10 glass-dark border-none focus:ring-2 focus:ring-purple-500/50 transition-all duration-300"
               />
             </div>
             <div className="flex gap-2">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="gap-2">
+                  <Button variant="outline" className="gap-2 glass-dark border-white/10 hover:border-white/20">
                     <Filter className="h-4 w-4" />
                     Sort by
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent>
+                <DropdownMenuContent className="glass-dark border-white/10">
                   <DropdownMenuItem onClick={() => setSortBy("latest")}>Latest</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setSortBy("popular")}>Most viewed</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setSortBy("trending")}>Trending</DropdownMenuItem>
@@ -155,11 +175,11 @@ const Index = () => {
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline">
+                  <Button variant="outline" className="glass-dark border-white/10 hover:border-white/20">
                     Categories
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent>
+                <DropdownMenuContent className="glass-dark border-white/10">
                   <DropdownMenuItem onClick={() => setSelectedCategory(null)}>
                     All Categories
                   </DropdownMenuItem>
@@ -174,12 +194,18 @@ const Index = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-          </div>
+          </motion.div>
 
-          <div>
-            <h2 className="text-xl font-bold text-white mb-4">Discover Videos</h2>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+          >
+            <h2 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600 mb-4">
+              Discover Videos
+            </h2>
             <VideoList videos={sortedVideos} setVideos={setVideos} showOnlyUserVideos={false} />
-          </div>
+          </motion.div>
         </div>
       </main>
     </div>

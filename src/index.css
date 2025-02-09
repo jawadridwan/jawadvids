@@ -77,11 +77,11 @@
 
 /* Glass morphism effects */
 .glass {
-  @apply backdrop-blur-lg bg-white/10 border border-white/20;
+  @apply backdrop-blur-lg bg-white/10 border border-white/20 shadow-xl;
 }
 
 .glass-dark {
-  @apply backdrop-blur-lg bg-black/30 border border-white/10;
+  @apply backdrop-blur-lg bg-black/30 border border-white/10 shadow-xl;
 }
 
 /* Card hover effects */
@@ -91,7 +91,7 @@
 
 /* Gradient text */
 .text-gradient {
-  @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent;
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600;
 }
 
 /* Custom scrollbar */
@@ -100,13 +100,34 @@
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-background;
+  @apply bg-gradient-to-b from-youtube-darker to-youtube-dark;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-primary/50 rounded-full;
+  @apply bg-gradient-to-r from-purple-500/50 to-pink-500/50 rounded-full;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-primary;
+  @apply bg-gradient-to-r from-purple-500 to-pink-500;
+}
+
+/* Animations */
+@keyframes glow {
+  0%, 100% {
+    filter: brightness(100%) blur(0px);
+  }
+  50% {
+    filter: brightness(150%) blur(2px);
+  }
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite;
+}
+
+/* Neon text effect */
+.neon-text {
+  text-shadow: 0 0 5px theme('colors.purple.400'),
+               0 0 10px theme('colors.purple.500'),
+               0 0 15px theme('colors.purple.600');
 }
