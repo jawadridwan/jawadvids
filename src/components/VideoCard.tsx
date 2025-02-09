@@ -216,6 +216,8 @@ export const VideoCard = ({
         description={description}
         hashtags={hashtags}
         views={metrics.views.toString()}
+        showTitle={false}
+        showViews={false}
       />
 
       <div className="p-4 space-y-4">
