@@ -1,3 +1,4 @@
+
 import { Badge } from "../ui/badge";
 
 interface VideoMetadataProps {
@@ -6,6 +7,8 @@ interface VideoMetadataProps {
   hashtags?: string[];
   views: string;
   status?: 'processing' | 'ready' | 'failed';
+  showTitle?: boolean;
+  showViews?: boolean;
 }
 
 export const VideoMetadata = ({ 
@@ -13,7 +16,9 @@ export const VideoMetadata = ({
   description, 
   hashtags, 
   views, 
-  status 
+  status,
+  showTitle = true,
+  showViews = true
 }: VideoMetadataProps) => {
   return (
     <div className="p-4 space-y-3">
@@ -25,7 +30,9 @@ export const VideoMetadata = ({
           {status === 'ready' ? 'Ready' : status === 'processing' ? 'Processing' : 'Failed'}
         </Badge>
       )}
-      <h3 className="text-white font-medium line-clamp-2 text-base md:text-lg">{title}</h3>
+      {showTitle && (
+        <h3 className="text-white font-medium line-clamp-2 text-base md:text-lg">{title}</h3>
+      )}
       {description && (
         <p className="text-youtube-gray text-sm line-clamp-2">{description}</p>
       )}
@@ -36,7 +43,9 @@ export const VideoMetadata = ({
           </span>
         ))}
       </div>
-      <p className="text-youtube-gray text-sm">{views} views</p>
+      {showViews && (
+        <p className="text-youtube-gray text-sm">{views} views</p>
+      )}
     </div>
   );
 };
