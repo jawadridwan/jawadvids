@@ -1,3 +1,4 @@
+
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { useState } from "react";
@@ -7,9 +8,10 @@ import { toast } from "sonner";
 interface ThumbnailUploadProps {
   onThumbnailSelect: (file: File) => void;
   disabled?: boolean;
+  videoName?: string;
 }
 
-export const ThumbnailUpload = ({ onThumbnailSelect, disabled }: ThumbnailUploadProps) => {
+export const ThumbnailUpload = ({ onThumbnailSelect, disabled, videoName }: ThumbnailUploadProps) => {
   const [preview, setPreview] = useState<string>("");
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -98,6 +100,22 @@ export const ThumbnailUpload = ({ onThumbnailSelect, disabled }: ThumbnailUpload
 
   return (
     <div className="space-y-4">
+      {videoName && !preview && (
+        <div className="p-4 border border-dashed rounded-lg bg-gray-50 dark:bg-gray-900">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Video selected: {videoName}
+          </p>
+        </div>
+      )}
+      {preview && (
+        <div className="relative aspect-video w-full overflow-hidden rounded-lg">
+          <img
+            src={preview}
+            alt="Thumbnail preview"
+            className="h-full w-full object-cover"
+          />
+        </div>
+      )}
       <div className="flex items-center gap-4">
         <Input
           type="file"
@@ -111,20 +129,11 @@ export const ThumbnailUpload = ({ onThumbnailSelect, disabled }: ThumbnailUpload
           <Button type="button" variant="outline" asChild disabled={disabled}>
             <span className="flex items-center gap-2">
               <Upload className="h-4 w-4" />
-              Upload Thumbnail
+              Upload Custom Thumbnail (Optional)
             </span>
           </Button>
         </label>
       </div>
-      {preview && (
-        <div className="relative aspect-video w-full overflow-hidden rounded-lg">
-          <img
-            src={preview}
-            alt="Thumbnail preview"
-            className="h-full w-full object-cover"
-          />
-        </div>
-      )}
     </div>
   );
 };

@@ -1,3 +1,4 @@
+
 import { Input } from "../ui/input";
 import { useToast } from "../ui/use-toast";
 
@@ -32,6 +33,7 @@ export const VideoUploadField = ({ onVideoSelect, disabled }: VideoUploadFieldPr
         onChange={handleVideoSelect}
         disabled={disabled}
       />
+      <p className="text-sm text-gray-500">Maximum file size: 2GB</p>
     </div>
   );
 };

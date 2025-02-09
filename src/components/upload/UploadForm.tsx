@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -91,6 +92,7 @@ export const UploadForm = ({ onUploadComplete, onClose }: UploadFormProps) => {
         <ThumbnailUpload
           onThumbnailSelect={(file) => setThumbnail(file)}
           disabled={uploading}
+          videoName={video?.name}
         />
 
         <VisibilitySelect
