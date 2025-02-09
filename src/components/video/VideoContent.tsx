@@ -3,6 +3,8 @@ import { VideoMetadata } from "./VideoMetadata";
 import { VideoMetricsDisplay } from "./VideoMetricsDisplay";
 import { VideoInteractionBar } from "./VideoInteractionBar";
 import { VideoTags } from "./VideoTags";
+import { VideoHeader } from "./VideoHeader";
+import { toast } from "sonner";
 
 interface VideoContentProps {
   title: string;
