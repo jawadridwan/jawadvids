@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -48,19 +49,25 @@ export const useVideoUpload = (onUploadComplete: (videoData: any) => void) => {
       formData.append('userId', user.id);
       formData.append('categoryId', categoryId);
 
-      console.log('Invoking upload-video function with:', {
-        title,
-        description: description ? 'present' : 'not present',
-        userId: user.id,
-        videoName: video.name,
-        categoryId
-      });
+      // Simulate upload progress
+      const progressInterval = setInterval(() => {
+        setProgress((prev) => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return prev;
+          }
+          return prev + 10;
+        });
+      }, 500);
 
       try {
-        // Get the function URL from Supabase
         const { data: functionData, error: functionError } = await supabase.functions.invoke('upload-video', {
           body: formData,
         });
+
+        // Clear interval and set to 100% when upload is complete
+        clearInterval(progressInterval);
+        setProgress(100);
 
         console.log('Function response:', { functionData, functionError });
 

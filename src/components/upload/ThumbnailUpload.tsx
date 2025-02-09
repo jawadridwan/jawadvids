@@ -12,7 +12,7 @@ interface ThumbnailUploadProps {
 }
 
 export const ThumbnailUpload = ({ onThumbnailSelect, disabled, videoName }: ThumbnailUploadProps) => {
-  const [preview, setPreview] = useState<string>("");
+  const [selectedFile, setSelectedFile] = useState<string>("");
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -29,91 +29,26 @@ export const ThumbnailUpload = ({ onThumbnailSelect, disabled, videoName }: Thum
         return;
       }
 
-      try {
-        // Create a preview
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setPreview(reader.result as string);
-        };
-        reader.readAsDataURL(file);
-
-        // Resize image if needed
-        const resizedFile = await resizeImage(file);
-        onThumbnailSelect(resizedFile);
-        toast.success('Thumbnail uploaded successfully');
-      } catch (error) {
-        console.error('Error processing image:', error);
-        toast.error('Failed to process image');
-      }
+      setSelectedFile(file.name);
+      onThumbnailSelect(file);
+      toast.success('Thumbnail selected successfully');
     }
-  };
-
-  const resizeImage = (file: File): Promise<File> => {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.src = URL.createObjectURL(file);
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        let width = img.width;
-        let height = img.height;
-
-        // Maximum dimensions
-        const MAX_WIDTH = 1280;
-        const MAX_HEIGHT = 720;
-
-        if (width > MAX_WIDTH || height > MAX_HEIGHT) {
-          const ratio = Math.min(MAX_WIDTH / width, MAX_HEIGHT / height);
-          width *= ratio;
-          height *= ratio;
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        
-        if (!ctx) {
-          reject(new Error('Failed to get canvas context'));
-          return;
-        }
-
-        ctx.drawImage(img, 0, 0, width, height);
-        
-        canvas.toBlob(
-          (blob) => {
-            if (!blob) {
-              reject(new Error('Failed to create blob'));
-              return;
-            }
-            const resizedFile = new File([blob], file.name, {
-              type: 'image/jpeg',
-              lastModified: Date.now(),
-            });
-            resolve(resizedFile);
-          },
-          'image/jpeg',
-          0.8
-        );
-      };
-      img.onerror = () => reject(new Error('Failed to load image'));
-    });
   };
 
   return (
     <div className="space-y-4">
-      {videoName && !preview && (
+      {videoName && (
         <div className="p-4 border border-dashed rounded-lg bg-gray-50 dark:bg-gray-900">
           <p className="text-sm text-gray-600 dark:text-gray-400">
             Video selected: {videoName}
           </p>
         </div>
       )}
-      {preview && (
-        <div className="relative aspect-video w-full overflow-hidden rounded-lg">
-          <img
-            src={preview}
-            alt="Thumbnail preview"
-            className="h-full w-full object-cover"
-          />
+      {selectedFile && (
+        <div className="p-4 border border-dashed rounded-lg bg-gray-50 dark:bg-gray-900">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Thumbnail selected: {selectedFile}
+          </p>
         </div>
       )}
       <div className="flex items-center gap-4">

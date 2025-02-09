@@ -89,6 +89,12 @@ export const VideoCard = ({
         });
 
       if (viewError) throw viewError;
+      
+      // Update local view count immediately
+      setMetrics(prev => ({
+        ...prev,
+        views: prev.views + 1
+      }));
     } catch (error) {
       console.error('Error recording view:', error);
     }
@@ -126,30 +132,6 @@ export const VideoCard = ({
         }
       )
       .subscribe();
-
-    const fetchMetrics = async () => {
-      const { data, error } = await supabase
-        .from('performance_metrics')
-        .select('views_count, likes_count, comments_count')
-        .eq('video_id', id)
-        .single();
-
-      if (error) {
-        console.error('Error fetching metrics:', error);
-        return;
-      }
-
-      if (data) {
-        setMetrics(prev => ({
-          ...prev,
-          views: data.views_count || 0,
-          likes: data.likes_count || 0,
-          comments: data.comments_count || 0
-        }));
-      }
-    };
-
-    fetchMetrics();
 
     return () => {
       supabase.removeChannel(channel);
