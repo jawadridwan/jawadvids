@@ -39,7 +39,7 @@ export const useVideoMetrics = (
             .from('performance_metrics')
             .select('views_count')
             .eq('video_id', id)
-            .single();
+            .maybeSingle();
           
           if (error) {
             console.error('Error fetching view count:', error);
@@ -71,10 +71,9 @@ export const useVideoMetrics = (
           video_id: id,
           viewer_id: userId,
           watched_duration: 0,
-          watched_percentage: 0
-        })
-        .onConflict('unique_viewer_video')
-        .ignore(); // Just ignore if the view already exists
+          watched_percentage: 0,
+          timestamp: new Date().toISOString()
+        });
 
       if (viewError) {
         console.error('Error recording view:', viewError);
@@ -100,3 +99,4 @@ export const useVideoMetrics = (
     handleVideoPlay
   };
 };
+
