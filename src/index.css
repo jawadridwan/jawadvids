@@ -32,8 +32,27 @@
   * {
     @apply border-border;
   }
+  
+  html {
+    @apply scroll-smooth antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground overflow-x-hidden touch-pan-y;
+    font-feature-settings: "ss01", "ss02", "cv01", "cv02", "cv03";
+  }
+
+  /* Improve mobile scrolling */
+  @supports (-webkit-overflow-scrolling: touch) {
+    body {
+      -webkit-overflow-scrolling: touch;
+    }
+  }
+
+  /* Remove pull-to-refresh on mobile */
+  body {
+    overscroll-behavior-y: none;
   }
 }
 
@@ -111,3 +130,57 @@
                0 0 15px theme('colors.purple.600');
 }
 
+/* Mobile optimizations */
+@layer utilities {
+  .touch-action-none {
+    touch-action: none;
+  }
+  
+  .overscroll-none {
+    overscroll-behavior: none;
+  }
+  
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
+/* Enhanced mobile interactions */
+@media (hover: none) {
+  .hover\:scale-105:hover {
+    transform: none;
+  }
+  
+  .active\:scale-95:active {
+    transform: scale(0.98);
+  }
+}
+
+/* Smooth transitions */
+.page-transition {
+  @apply transition-all duration-300 ease-in-out;
+}
+
+/* Loading skeleton animation */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.loading-skeleton {
+  background: linear-gradient(90deg, 
+    theme('colors.youtube.dark') 25%, 
+    theme('colors.youtube.darker') 50%, 
+    theme('colors.youtube.dark') 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}

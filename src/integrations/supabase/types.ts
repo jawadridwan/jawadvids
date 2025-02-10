@@ -263,6 +263,24 @@ export type Database = {
           },
         ]
       }
+      tags: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       users: {
         Row: {
           avatar_url: string | null
@@ -287,12 +305,43 @@ export type Database = {
         }
         Relationships: []
       }
+      video_tags: {
+        Row: {
+          tag_id: string
+          video_id: string
+        }
+        Insert: {
+          tag_id: string
+          video_id: string
+        }
+        Update: {
+          tag_id?: string
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_tags_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       videos: {
         Row: {
           category_id: string | null
           created_at: string | null
           description: string | null
           id: string
+          search_vector: unknown | null
           status: string | null
           thumbnail_url: string | null
           title: string
@@ -305,6 +354,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           id?: string
+          search_vector?: unknown | null
           status?: string | null
           thumbnail_url?: string | null
           title: string
@@ -317,6 +367,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           id?: string
+          search_vector?: unknown | null
           status?: string | null
           thumbnail_url?: string | null
           title?: string
@@ -388,7 +439,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      search_videos: {
+        Args: {
+          search_query: string
+        }
+        Returns: {
+          id: string
+          title: string
+          description: string
+          thumbnail_url: string
+          url: string
+          created_at: string
+          updated_at: string
+          user_id: string
+          status: string
+          category_id: string
+          rank: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
