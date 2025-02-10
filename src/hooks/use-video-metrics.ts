@@ -73,7 +73,7 @@ export const useVideoMetrics = (
           watched_duration: 0,
           watched_percentage: 0
         }, {
-          onConflict: 'viewer_id,video_id'
+          onConflict: 'unique_viewer_video'
         });
 
       if (viewError) {
