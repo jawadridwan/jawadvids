@@ -67,14 +67,14 @@ export const useVideoMetrics = (
     try {
       const { error: viewError } = await supabase
         .from('views')
-        .upsert({
+        .insert({
           video_id: id,
           viewer_id: userId,
           watched_duration: 0,
           watched_percentage: 0
-        }, {
-          onConflict: 'unique_viewer_video'
-        });
+        })
+        .onConflict('unique_viewer_video')
+        .ignore(); // Just ignore if the view already exists
 
       if (viewError) {
         console.error('Error recording view:', viewError);
