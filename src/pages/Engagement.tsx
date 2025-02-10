@@ -1,3 +1,4 @@
+
 import { Sidebar } from "@/components/Sidebar";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,24 +7,39 @@ import { MetricCard } from "@/components/MetricCard";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const Engagement = () => {
   const session = useSession();
+  const navigate = useNavigate();
   const [realtimeEngagement, setRealtimeEngagement] = useState<{
     totalLikes: number;
     totalComments: number;
     totalShares: number;
   } | null>(null);
 
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!session) {
+      navigate('/auth');
+      toast.error('Please sign in to view engagement analytics');
+    }
+  }, [session, navigate]);
+
   const { data: engagementData, isError: isEngagementError, refetch: refetchEngagement } = useQuery({
-    queryKey: ['engagement-metrics'],
+    queryKey: ['engagement-metrics', session?.user?.id],
     queryFn: async () => {
       if (!session?.user?.id) return null;
 
-      const { data: videos } = await supabase
+      const { data: videos, error: videosError } = await supabase
         .from('videos')
         .select('id')
         .eq('user_id', session.user.id);
+
+      if (videosError) {
+        console.error('Error fetching videos:', videosError);
+        throw videosError;
+      }
 
       if (!videos?.length) return null;
 
@@ -35,6 +51,7 @@ const Engagement = () => {
         .in('video_id', videoIds);
 
       if (error) {
+        console.error('Error fetching engagement data:', error);
         toast.error('Failed to fetch engagement data');
         throw error;
       }
@@ -45,14 +62,19 @@ const Engagement = () => {
   });
 
   const { data: performanceMetrics, isError: isPerformanceError, isLoading } = useQuery({
-    queryKey: ['performance-metrics'],
+    queryKey: ['performance-metrics', session?.user?.id],
     queryFn: async () => {
       if (!session?.user?.id) return null;
 
-      const { data: videos } = await supabase
+      const { data: videos, error: videosError } = await supabase
         .from('videos')
         .select('id')
         .eq('user_id', session.user.id);
+
+      if (videosError) {
+        console.error('Error fetching videos:', videosError);
+        throw videosError;
+      }
 
       if (!videos?.length) return null;
 
@@ -64,6 +86,7 @@ const Engagement = () => {
         .in('video_id', videoIds);
 
       if (error) {
+        console.error('Error fetching performance metrics:', error);
         toast.error('Failed to fetch performance metrics');
         throw error;
       }
@@ -137,11 +160,7 @@ const Engagement = () => {
   }, [engagementData]);
 
   if (!session) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-youtube-darker">
-        <p className="text-white text-xl">Please sign in to view engagement analytics</p>
-      </div>
-    );
+    return null; // Let the useEffect handle the redirect
   }
 
   if (isEngagementError || isPerformanceError) {
