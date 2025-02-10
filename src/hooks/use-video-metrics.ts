@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface VideoMetrics {
   views: number;
@@ -66,21 +67,30 @@ export const useVideoMetrics = (
     try {
       const { error: viewError } = await supabase
         .from('views')
-        .insert({
+        .upsert({
           video_id: id,
           viewer_id: userId,
           watched_duration: 0,
           watched_percentage: 0
+        }, {
+          onConflict: 'viewer_id,video_id'
         });
 
-      if (viewError) throw viewError;
-      
+      if (viewError) {
+        console.error('Error recording view:', viewError);
+        toast.error('Error recording view');
+        return;
+      }
+
+      // Update local state optimistically
       setMetrics(prev => ({
         ...prev,
         views: prev.views + 1
       }));
+      
     } catch (error) {
       console.error('Error recording view:', error);
+      toast.error('Error recording view');
     }
   };
 
