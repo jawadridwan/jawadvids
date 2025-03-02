@@ -1,3 +1,4 @@
+
 import { VideoCard } from "./VideoCard";
 import { VideoActions } from "./video/VideoActions";
 import { useQuery } from "@tanstack/react-query";
@@ -5,14 +6,21 @@ import { supabase } from "@/integrations/supabase/client";
 import { Video } from "@/types/video";
 import { useSession } from "@supabase/auth-helpers-react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 interface VideoListProps {
   videos: Video[];
   setVideos: (videos: Video[]) => void;
   showOnlyUserVideos?: boolean;
+  layout?: "grid" | "list";
 }
 
-export const VideoList = ({ videos: initialVideos, setVideos, showOnlyUserVideos = false }: VideoListProps) => {
+export const VideoList = ({ 
+  videos: initialVideos, 
+  setVideos, 
+  showOnlyUserVideos = false,
+  layout = "grid" 
+}: VideoListProps) => {
   const session = useSession();
 
   const { data: videos = initialVideos, isError, refetch } = useQuery({
@@ -100,9 +108,16 @@ export const VideoList = ({ videos: initialVideos, setVideos, showOnlyUserVideos
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className={cn(
+      layout === "grid" 
+        ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" 
+        : "flex flex-col space-y-4"
+    )}>
       {videos.map((video) => (
-        <div key={video.id} className="relative group">
+        <div key={video.id} className={cn(
+          "relative group",
+          layout === "list" && "w-full"
+        )}>
           <VideoCard
             id={video.id}
             title={video.title}
@@ -115,6 +130,7 @@ export const VideoList = ({ videos: initialVideos, setVideos, showOnlyUserVideos
             likes={video.likes}
             dislikes={video.dislikes}
             user_id={video.user_id}
+            layout={layout}
           />
           <VideoActions video={video} onDelete={refetch} />
         </div>
