@@ -1,3 +1,4 @@
+
 export interface Video {
   id: string;
   title: string;
@@ -22,6 +23,22 @@ export interface Video {
     comments: number;
     shares: number;
   };
+  // Additional fields for search results
+  rank?: number;
+}
+
+export interface SearchResult {
+  id: string;
+  title: string;
+  description: string | null;
+  thumbnail_url: string | null;
+  url: string | null;
+  created_at: string;
+  updated_at: string;
+  user_id: string;
+  status: string;
+  category_id: string | null;
+  rank: number;
 }
 
 export type VideoStatus = 'processing' | 'ready' | 'failed';

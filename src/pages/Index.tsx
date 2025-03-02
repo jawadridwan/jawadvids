@@ -1,4 +1,3 @@
-
 import { Sidebar } from "@/components/Sidebar";
 import { VideoList } from "@/components/VideoList";
 import { VideoUploadDialog } from "@/components/upload/VideoUploadDialog";
@@ -7,7 +6,7 @@ import { AuthComponent } from "@/components/auth/Auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
 import { toast } from "sonner";
-import { Video } from "@/types/video";
+import { Video, SearchResult } from "@/types/video";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Search, Filter, SunMoon, Tags, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -69,12 +68,14 @@ const Index = () => {
         .select('*')
         .order('name');
       
-      if (error) throw error;
-      return data;
+      if (error) {
+        console.error('Error fetching tags:', error);
+        return [];
+      }
+      return data || [];
     }
   });
 
-  // Enhanced search with full-text search capability
   const { data: searchResults, isLoading: isSearching } = useQuery({
     queryKey: ['search', searchQuery],
     queryFn: async () => {
@@ -86,7 +87,30 @@ const Index = () => {
         });
 
       if (error) throw error;
-      return data;
+      
+      return data?.map((result: SearchResult): Video => ({
+        id: result.id,
+        title: result.title,
+        description: result.description,
+        hashtags: [],
+        views: '0',
+        thumbnail: result.thumbnail_url || '/placeholder.svg',
+        url: result.url || '',
+        uploadDate: result.created_at,
+        status: (result.status as 'processing' | 'ready' | 'failed') || 'ready',
+        created_at: result.created_at,
+        updated_at: result.updated_at,
+        user_id: result.user_id,
+        thumbnail_url: result.thumbnail_url,
+        category_id: result.category_id || undefined,
+        rank: result.rank,
+        engagement: {
+          views: 0,
+          likes: 0,
+          comments: 0,
+          shares: 0
+        }
+      }));
     },
     enabled: searchQuery.length > 0
   });
@@ -119,7 +143,6 @@ const Index = () => {
     toast.success(`Switched to ${!isDarkMode ? 'dark' : 'light'} mode`);
   };
 
-  // Enhanced filtering logic
   const filteredVideos = (searchResults || videos).filter((video) => {
     const matchesCategory = !selectedCategory || video.category_id === selectedCategory;
     const matchesTags = selectedTags.length === 0 || 
@@ -315,7 +338,7 @@ const Index = () => {
                     )}
                   </div>
                   <VideoList 
-                    videos={sortedVideos} 
+                    videos={sortedVideos as Video[]} 
                     setVideos={setVideos} 
                     showOnlyUserVideos={false} 
                   />

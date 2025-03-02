@@ -27,6 +27,50 @@ export type Database = {
         }
         Relationships: []
       }
+      app_analytics: {
+        Row: {
+          active_users: number | null
+          app_name: string
+          created_at: string | null
+          error_count: number | null
+          id: string
+          performance_score: number | null
+          total_views: number | null
+          updated_at: string | null
+          website_id: string | null
+        }
+        Insert: {
+          active_users?: number | null
+          app_name: string
+          created_at?: string | null
+          error_count?: number | null
+          id?: string
+          performance_score?: number | null
+          total_views?: number | null
+          updated_at?: string | null
+          website_id?: string | null
+        }
+        Update: {
+          active_users?: number | null
+          app_name?: string
+          created_at?: string | null
+          error_count?: number | null
+          id?: string
+          performance_score?: number | null
+          total_views?: number | null
+          updated_at?: string | null
+          website_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "app_analytics_website_id_fkey"
+            columns: ["website_id"]
+            isOneToOne: false
+            referencedRelation: "websites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           created_at: string | null
@@ -44,6 +88,33 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      collections: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
           name?: string
         }
         Relationships: []
@@ -139,6 +210,84 @@ export type Database = {
           },
         ]
       }
+      error_logs: {
+        Row: {
+          app_name: string
+          browser_info: Json | null
+          created_at: string | null
+          error_message: string
+          error_stack: string | null
+          id: string
+          user_id: string | null
+          website_id: string | null
+        }
+        Insert: {
+          app_name: string
+          browser_info?: Json | null
+          created_at?: string | null
+          error_message: string
+          error_stack?: string | null
+          id?: string
+          user_id?: string | null
+          website_id?: string | null
+        }
+        Update: {
+          app_name?: string
+          browser_info?: Json | null
+          created_at?: string | null
+          error_message?: string
+          error_stack?: string | null
+          id?: string
+          user_id?: string | null
+          website_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "error_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "error_logs_website_id_fkey"
+            columns: ["website_id"]
+            isOneToOne: false
+            referencedRelation: "websites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hacking_searches: {
+        Row: {
+          created_at: string | null
+          id: string
+          search_query: string
+          search_result: Json | null
+          search_type: string
+          status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          search_query: string
+          search_result?: Json | null
+          search_type: string
+          status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          search_query?: string
+          search_result?: Json | null
+          search_type?: string
+          status?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       performance_metrics: {
         Row: {
           avg_watch_duration: number | null
@@ -224,6 +373,102 @@ export type Database = {
           },
         ]
       }
+      products: {
+        Row: {
+          category: string
+          created_at: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          is_new_arrival: boolean | null
+          is_on_sale: boolean | null
+          name: string
+          original_price: number | null
+          price: number
+          search_vector: unknown | null
+          stock_quantity: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_new_arrival?: boolean | null
+          is_on_sale?: boolean | null
+          name: string
+          original_price?: number | null
+          price: number
+          search_vector?: unknown | null
+          stock_quantity?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_new_arrival?: boolean | null
+          is_on_sale?: boolean | null
+          name?: string
+          original_price?: number | null
+          price?: number
+          search_vector?: unknown | null
+          stock_quantity?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      products_collections: {
+        Row: {
+          collection_id: string
+          product_id: string
+        }
+        Insert: {
+          collection_id: string
+          product_id: string
+        }
+        Update: {
+          collection_id?: string
+          product_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_collections_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "collections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_collections_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          email: string | null
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          email?: string | null
+          id: string
+          updated_at?: string | null
+        }
+        Update: {
+          email?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       reactions: {
         Row: {
           created_at: string | null
@@ -263,6 +508,51 @@ export type Database = {
           },
         ]
       }
+      real_time_events: {
+        Row: {
+          app_name: string
+          created_at: string | null
+          event_data: Json | null
+          event_type: string
+          id: string
+          user_id: string | null
+          website_id: string | null
+        }
+        Insert: {
+          app_name: string
+          created_at?: string | null
+          event_data?: Json | null
+          event_type: string
+          id?: string
+          user_id?: string | null
+          website_id?: string | null
+        }
+        Update: {
+          app_name?: string
+          created_at?: string | null
+          event_data?: Json | null
+          event_type?: string
+          id?: string
+          user_id?: string | null
+          website_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "real_time_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "real_time_events_website_id_fkey"
+            columns: ["website_id"]
+            isOneToOne: false
+            referencedRelation: "websites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tags: {
         Row: {
           created_at: string
@@ -280,6 +570,54 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      user_sessions: {
+        Row: {
+          app_name: string
+          created_at: string | null
+          device_info: Json | null
+          id: string
+          session_end: string | null
+          session_start: string | null
+          user_id: string | null
+          website_id: string | null
+        }
+        Insert: {
+          app_name: string
+          created_at?: string | null
+          device_info?: Json | null
+          id?: string
+          session_end?: string | null
+          session_start?: string | null
+          user_id?: string | null
+          website_id?: string | null
+        }
+        Update: {
+          app_name?: string
+          created_at?: string | null
+          device_info?: Json | null
+          id?: string
+          session_end?: string | null
+          session_start?: string | null
+          user_id?: string | null
+          website_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_sessions_website_id_fkey"
+            columns: ["website_id"]
+            isOneToOne: false
+            referencedRelation: "websites"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       users: {
         Row: {
@@ -433,6 +771,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      websites: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          updated_at: string | null
+          url: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          updated_at?: string | null
+          url: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          updated_at?: string | null
+          url?: string
+          user_id?: string | null
+        }
+        Relationships: []
       }
     }
     Views: {
