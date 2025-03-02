@@ -6,6 +6,8 @@ import { VideoTags } from "./VideoTags";
 import { VideoHeader } from "./VideoHeader";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+import { Clock, Eye, Sparkles } from "lucide-react";
+import { formatDistance } from "date-fns";
 
 interface VideoContentProps {
   title: string;
@@ -21,6 +23,8 @@ interface VideoContentProps {
   videoId: string;
   category?: { name: string } | null;
   onInteraction?: () => void;
+  isCompact?: boolean;
+  uploadDate?: string;
 }
 
 export const VideoContent = ({
@@ -31,61 +35,74 @@ export const VideoContent = ({
   status,
   videoId,
   category,
-  onInteraction
+  onInteraction,
+  isCompact = false,
+  uploadDate
 }: VideoContentProps) => {
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
-      className="bg-gradient-to-b from-youtube-dark/50 to-youtube-darker rounded-xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 border border-white/5"
+      className="flex flex-col overflow-hidden"
     >
-      <VideoHeader title={title} status={status} />
+      <VideoHeader 
+        title={title} 
+        status={status} 
+        isCompact={isCompact}
+      />
       
-      {category && (
-        <motion.div 
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="px-4 py-1"
-        >
-          <span className="text-sm text-youtube-gray glass-dark px-3 py-1 rounded-full inline-flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
-            {category.name}
-          </span>
-        </motion.div>
-      )}
-
-      <VideoTags hashtags={hashtags} onTagClick={(tag) => {
-        toast.info(`Filtering by tag: ${tag}`, {
-          className: 'glass-dark',
-          duration: 2000,
-        });
-      }} />
-
-      <VideoMetadata
-        title={title}
-        description={description}
-        hashtags={hashtags}
-        views={metrics.views.toString()}
-        showTitle={false}
-        showViews={false}
+      <VideoTags 
+        hashtags={hashtags} 
+        onTagClick={(tag) => {
+          toast.info(`Filtering by tag: ${tag}`, {
+            className: 'glass-dark',
+            duration: 2000,
+          });
+        }} 
+        isCompact={isCompact}
       />
 
-      <div className="p-4 space-y-4">
-        <VideoMetricsDisplay
-          views={metrics.views}
-          likes={metrics.likes}
-          comments={metrics.comments}
-        />
-        
-        <VideoInteractionBar
-          videoId={videoId}
-          initialLikes={metrics.likes}
-          initialDislikes={metrics.dislikes}
-          initialComments={metrics.comments}
-          onInteraction={onInteraction}
-        />
-      </div>
+      {!isCompact && (
+        <div className="p-3 space-y-3">
+          {description && (
+            <p className="text-youtube-gray text-sm line-clamp-2 mb-2">{description}</p>
+          )}
+          
+          <VideoMetricsDisplay
+            views={metrics.views}
+            likes={metrics.likes}
+            comments={metrics.comments}
+            isCompact={isCompact}
+          />
+          
+          <VideoInteractionBar
+            videoId={videoId}
+            initialLikes={metrics.likes}
+            initialDislikes={metrics.dislikes}
+            initialComments={metrics.comments}
+            onInteraction={onInteraction}
+          />
+        </div>
+      )}
+      
+      {isCompact && (
+        <div className="px-3 pb-3 pt-1">
+          <div className="flex items-center justify-between text-xs text-youtube-gray">
+            <div className="flex items-center gap-1">
+              <Eye className="w-3 h-3" />
+              <span>{metrics.views}</span>
+            </div>
+            
+            {uploadDate && (
+              <div className="flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                <span>{formatDistance(new Date(uploadDate), new Date(), { addSuffix: true })}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 };

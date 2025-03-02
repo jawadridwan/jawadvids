@@ -82,6 +82,20 @@
   @apply backdrop-blur-lg bg-black/30 border border-white/10 shadow-xl;
 }
 
+/* Enhanced glass effects */
+.glass-dark-deep {
+  @apply backdrop-blur-xl bg-black/50 border border-white/5 shadow-2xl;
+}
+
+.glass-gradient {
+  @apply backdrop-blur-lg bg-gradient-to-br from-white/5 to-white/10 border border-white/20 shadow-xl;
+}
+
+/* Depth effects */
+.card-depth {
+  @apply shadow-[0_8px_16px_rgba(0,0,0,0.2)] hover:shadow-[0_16px_32px_rgba(0,0,0,0.3)] transition-all duration-300;
+}
+
 /* Card hover effects */
 .card-hover {
   @apply transition-all duration-300 hover:scale-105 hover:shadow-xl;
@@ -90,6 +104,10 @@
 /* Gradient text */
 .text-gradient {
   @apply bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600;
+}
+
+.text-gradient-subtle {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-white via-white/90 to-white/70;
 }
 
 /* Custom scrollbar */
@@ -123,6 +141,19 @@
   animation: glow 2s ease-in-out infinite;
 }
 
+/* Improved hover effects */
+.hover-lift {
+  @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-lg;
+}
+
+.hover-saturate {
+  @apply transition-all duration-300 hover:saturate-150;
+}
+
+.hover-brightness {
+  @apply transition-all duration-300 hover:brightness-110;
+}
+
 /* Neon text effect */
 .neon-text {
   text-shadow: 0 0 5px theme('colors.purple.400'),
@@ -147,6 +178,16 @@
   .safe-top {
     padding-top: env(safe-area-inset-top);
   }
+  
+  /* Mobile tap states */
+  .tap-highlight {
+    @apply active:bg-white/10;
+  }
+  
+  /* Mobile drag handle */
+  .drag-handle {
+    @apply w-10 h-1 mx-auto bg-white/20 rounded-full my-2;
+  }
 }
 
 /* Enhanced mobile interactions */
@@ -157,6 +198,11 @@
   
   .active\:scale-95:active {
     transform: scale(0.98);
+  }
+  
+  /* Mobile-specific feedback */
+  .mobile-tap-feedback {
+    @apply active:bg-white/10 active:scale-[0.98] transition-all duration-150;
   }
 }
 
@@ -183,4 +229,92 @@
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
+}
+
+/* Button animations */
+.btn-pulse {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-pulse::after {
+  content: '';
+  @apply absolute inset-0 rounded-lg bg-white/20 opacity-0;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Video card styles */
+.video-card {
+  @apply bg-gradient-to-br from-youtube-dark to-youtube-darker/90 rounded-xl overflow-hidden shadow-lg transition-all duration-300 border border-white/5 hover:shadow-xl hover:border-white/10;
+}
+
+.video-card-compact {
+  @apply bg-gradient-to-br from-youtube-dark/90 to-youtube-darker/70 rounded-lg overflow-hidden shadow-md transition-all duration-300 border border-white/5;
+}
+
+/* Bottom navigation for mobile */
+.bottom-nav {
+  @apply fixed bottom-0 left-0 right-0 bg-youtube-darker/90 backdrop-blur-lg border-t border-white/10 py-2 px-4 flex items-center justify-around z-50 safe-bottom;
+}
+
+.bottom-nav-item {
+  @apply flex flex-col items-center text-youtube-gray hover:text-white transition-colors;
+}
+
+.bottom-nav-icon {
+  @apply w-5 h-5 mb-1;
+}
+
+.bottom-nav-label {
+  @apply text-xs;
+}
+
+/* Custom badges */
+.badge-gradient {
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gradient-to-r from-purple-500 to-pink-500 text-white;
+}
+
+.badge-outline {
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border border-white/10 text-white;
+}
+
+/* Improved search bar */
+.search-bar {
+  @apply w-full relative;
+}
+
+.search-bar input {
+  @apply w-full bg-youtube-dark/50 border border-white/10 rounded-lg py-2 pl-10 pr-4 text-white outline-none focus:ring-2 focus:ring-purple-500/40 transition-all duration-300;
+}
+
+.search-bar .icon {
+  @apply absolute left-3 top-1/2 transform -translate-y-1/2 text-youtube-gray;
+}
+
+/* Modern scrollable area */
+.modern-scroll {
+  @apply overflow-auto pr-2 transition-all duration-300;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+}
+
+.modern-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.modern-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.modern-scroll::-webkit-scrollbar-thumb {
+  @apply bg-white/10 rounded-full hover:bg-white/20 transition-colors;
 }

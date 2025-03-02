@@ -1,55 +1,61 @@
+
+import { Eye, MessageCircle, ThumbsUp } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { formatNumber } from "@/lib/format";
-import { motion, AnimatePresence } from "framer-motion";
+import { formatCompactNumber } from "@/lib/format";
 
 interface VideoMetricsDisplayProps {
   views: number;
   likes: number;
   comments: number;
-  className?: string;
+  isCompact?: boolean;
 }
 
-export const VideoMetricsDisplay = ({ views, likes, comments, className }: VideoMetricsDisplayProps) => {
+export const VideoMetricsDisplay = ({ 
+  views, 
+  likes, 
+  comments,
+  isCompact = false
+}: VideoMetricsDisplayProps) => {
+  const metrics = [
+    { icon: Eye, label: 'views', value: views },
+    { icon: ThumbsUp, label: 'likes', value: likes },
+    { icon: MessageCircle, label: 'comments', value: comments },
+  ];
+
+  if (isCompact) {
+    return (
+      <div className="flex items-center gap-3 text-xs text-youtube-gray">
+        <div className="flex items-center gap-1">
+          <Eye className="w-3 h-3" />
+          <span>{formatCompactNumber(views)}</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <ThumbsUp className="w-3 h-3" />
+          <span>{formatCompactNumber(likes)}</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className={cn("flex gap-4 text-sm text-youtube-gray", className)}>
-      <AnimatePresence mode="wait">
-        <motion.span 
-          key={`views-${views}`}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          className="flex items-center gap-1"
+    <div className="flex items-center justify-between">
+      {metrics.map(({ icon: Icon, label, value }, index) => (
+        <div 
+          key={label}
+          className={cn(
+            "flex flex-col items-center gap-1 px-2 py-1 rounded-lg",
+            "bg-gradient-to-b from-white/5 to-transparent backdrop-blur-sm"
+          )}
         >
-          <span>{formatNumber(views)}</span>
-          <span>views</span>
-        </motion.span>
-      </AnimatePresence>
-      
-      <AnimatePresence mode="wait">
-        <motion.span 
-          key={`likes-${likes}`}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          className="flex items-center gap-1"
-        >
-          <span>{formatNumber(likes)}</span>
-          <span>likes</span>
-        </motion.span>
-      </AnimatePresence>
-      
-      <AnimatePresence mode="wait">
-        <motion.span 
-          key={`comments-${comments}`}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          className="flex items-center gap-1"
-        >
-          <span>{formatNumber(comments)}</span>
-          <span>comments</span>
-        </motion.span>
-      </AnimatePresence>
+          <Icon className="w-4 h-4 text-youtube-gray" />
+          <div className="flex flex-col items-center">
+            <span className="text-white font-medium text-sm">
+              {formatCompactNumber(value)}
+            </span>
+            <span className="text-youtube-gray text-xs">{label}</span>
+          </div>
+        </div>
+      ))}
     </div>
   );
 };

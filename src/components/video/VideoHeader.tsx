@@ -6,38 +6,44 @@ import { Sparkles } from "lucide-react";
 interface VideoHeaderProps {
   title: string;
   status?: 'processing' | 'ready' | 'failed';
+  isCompact?: boolean;
 }
 
-export const VideoHeader = ({ title, status }: VideoHeaderProps) => {
+export const VideoHeader = ({ title, status, isCompact = false }: VideoHeaderProps) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="p-4 glass-dark backdrop-blur-lg border border-white/10 rounded-t-xl"
+      className={cn(
+        "p-3 border-b border-white/5",
+        isCompact ? "pb-2" : ""
+      )}
     >
-      {status && (
+      {status === 'ready' && (
         <motion.div
           initial={{ scale: 0.8 }}
           animate={{ scale: 1 }}
           className="mb-2 inline-flex"
         >
           <Badge 
-            variant={status === 'ready' ? 'default' : status === 'processing' ? 'secondary' : 'destructive'}
-            className={`
-              ${status === 'ready' ? 'bg-gradient-to-r from-green-500 to-emerald-700' : ''}
-              ${status === 'processing' ? 'animate-pulse bg-gradient-to-r from-blue-500 to-purple-700' : ''}
-              ${status === 'failed' ? 'bg-gradient-to-r from-red-500 to-pink-700' : ''}
-              shadow-lg
-            `}
+            variant="outline"
+            className="bg-gradient-to-r from-green-500/80 to-emerald-700/80 text-white border-none shadow-sm text-xs px-2"
           >
             <Sparkles className="w-3 h-3 mr-1" />
-            {status === 'ready' ? 'Ready' : status === 'processing' ? 'Processing' : 'Failed'}
+            Ready
           </Badge>
         </motion.div>
       )}
-      <h3 className="text-white font-medium line-clamp-2 text-base md:text-lg bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
+      
+      <h3 className={cn(
+        "font-medium line-clamp-2 bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400",
+        isCompact ? "text-sm" : "text-base"
+      )}>
         {title}
       </h3>
     </motion.div>
   );
 };
+
+// Import the cn utility at the top
+import { cn } from "@/lib/utils";
