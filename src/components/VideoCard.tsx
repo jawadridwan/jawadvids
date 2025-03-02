@@ -30,6 +30,7 @@ interface VideoCardProps {
   user_id: string;
   category_id?: string;
   isCompact?: boolean;
+  layout?: 'grid' | 'list';
 }
 
 export const VideoCard = ({ 
@@ -46,7 +47,8 @@ export const VideoCard = ({
   dislikes = 0,
   user_id,
   category_id,
-  isCompact = false
+  isCompact = false,
+  layout = 'grid'
 }: VideoCardProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [videoSize, setVideoSize] = useState<'default' | 'medium' | 'fullscreen'>('default');
@@ -95,10 +97,14 @@ export const VideoCard = ({
           ? "bg-gradient-to-br from-youtube-dark to-youtube-darker/80 border border-white/5" 
           : "bg-gradient-to-br from-youtube-dark to-youtube-darker border border-white/5",
         !isCompact && "hover:scale-[1.02] hover:shadow-purple-900/10",
+        layout === 'list' && "flex flex-col md:flex-row",
         className
       )}
     >
-      <div className="relative">
+      <div className={cn(
+        "relative",
+        layout === 'list' && "md:w-1/3"
+      )}>
         <VideoThumbnail
           url={url}
           thumbnail={thumbnail}
@@ -200,21 +206,25 @@ export const VideoCard = ({
         </motion.div>
       )}
 
-      <VideoContent
-        title={title}
-        description={description}
-        hashtags={hashtags}
-        metrics={metrics}
-        status={status}
-        videoId={id}
-        category={category}
-        isCompact={isCompact}
-        onInteraction={() => {
-          toast.success('Interaction recorded', {
-            className: "bg-youtube-darker border border-white/10",
-          });
-        }}
-      />
+      <div className={cn(
+        layout === 'list' && "md:w-2/3"
+      )}>
+        <VideoContent
+          title={title}
+          description={description}
+          hashtags={hashtags}
+          metrics={metrics}
+          status={status}
+          videoId={id}
+          category={category}
+          isCompact={isCompact || layout === 'list'}
+          onInteraction={() => {
+            toast.success('Interaction recorded', {
+              className: "bg-youtube-darker border border-white/10",
+            });
+          }}
+        />
+      </div>
 
       <VideoEditDialog
         id={id}

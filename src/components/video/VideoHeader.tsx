@@ -2,6 +2,7 @@
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface VideoHeaderProps {
   title: string;
@@ -44,6 +45,3 @@ export const VideoHeader = ({ title, status, isCompact = false }: VideoHeaderPro
     </motion.div>
   );
 };
-
-// Import the cn utility at the top
-import { cn } from "@/lib/utils";
